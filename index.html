@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="description" content="Professional material calculators for asphalt, concrete, sand & gravel, curb & gutter, and measurements." />
+  <meta property="og:title" content="Maman Calculators" />
+  <meta property="og:description" content="Professional construction material calculators by Maman Contracting." />
+  <meta property="og:image" content="https://maman-calculators.vercel.app/maman-logo.jpg" />
+  <link rel="apple-touch-icon" href="maman-logo.jpg" />
   <title>Maman Calculators</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -86,14 +91,33 @@
     .brand { display: flex; align-items: center; gap: 10px; flex: 1; }
     .brand img { width: 32px; height: 32px; border-radius: 8px; object-fit: contain; }
     .brand-name { font-size: 16px; font-weight: 800; color: var(--text); letter-spacing: 0.3px; }
+    .top-right { display: flex; align-items: center; gap: 8px; }
     .day-night-btn {
       background: var(--card2); border: 1px solid var(--border);
-      border-radius: 20px; padding: 6px 14px;
-      font-size: 14px; cursor: pointer; font-weight: 700;
+      border-radius: 20px; padding: 6px 12px;
+      font-size: 13px; cursor: pointer; font-weight: 700;
       color: var(--text2); transition: all 0.2s;
-      display: flex; align-items: center; gap: 6px;
+      display: flex; align-items: center; gap: 5px;
     }
     .day-night-btn:active { opacity: 0.7; }
+    .share-btn {
+      background: var(--accent); border: none;
+      border-radius: 20px; padding: 6px 14px;
+      font-size: 13px; cursor: pointer; font-weight: 800;
+      color: #fff; display: flex; align-items: center; gap: 5px;
+      transition: opacity 0.2s;
+    }
+    .share-btn:active { opacity: 0.75; }
+
+    /* Share toast */
+    .share-toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      background: #333; color: #fff; padding: 10px 20px;
+      border-radius: 20px; font-size: 14px; font-weight: 700;
+      z-index: 500; opacity: 0; transition: opacity 0.3s;
+      pointer-events: none; white-space: nowrap;
+    }
+    .share-toast.show { opacity: 1; }
 
     /* ══════════════════ PILL TABS ══════════════════ */
     .pill-wrap {
@@ -430,10 +454,14 @@
 <div class="top-bar">
   <div class="brand">
     <img src="maman-logo.jpg" alt="Maman" />
-    <span class="brand-name">Maman Contracting</span>
+    <span class="brand-name">Maman Calculators</span>
   </div>
-  <button class="day-night-btn" id="theme-btn" onclick="toggleTheme()">🌙 Night</button>
+  <div class="top-right">
+    <button class="share-btn" onclick="shareApp()">↗ Share</button>
+    <button class="day-night-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
+  </div>
 </div>
+<div class="share-toast" id="share-toast">Link copied! 📋</div>
 
 <!-- ─── PILL TABS ─── -->
 <div class="pill-wrap">
@@ -782,17 +810,33 @@
 </div>
 
 <script>
+  // ── Share ──
+  function shareApp() {
+    const url = 'https://maman-calculators.vercel.app';
+    const title = 'Maman Calculators';
+    const text = 'Professional construction material calculators — Asphalt, Concrete, Sand & Gravel, Curb & Gutter, and Measurements.';
+    if (navigator.share) {
+      navigator.share({ title, text, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        const toast = document.getElementById('share-toast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+      });
+    }
+  }
+
   // ── Theme ──
   function toggleTheme() {
     const isDay = document.body.classList.toggle('day');
-    document.getElementById('theme-btn').textContent = isDay ? '☀️ Day' : '🌙 Night';
+    document.getElementById('theme-btn').textContent = isDay ? '☀️' : '🌙';
     localStorage.setItem('maman-theme', isDay ? 'day' : 'night');
   }
   (function() {
     const saved = localStorage.getItem('maman-theme');
     if (saved === 'day') {
       document.body.classList.add('day');
-      document.getElementById('theme-btn').textContent = '☀️ Day';
+      document.getElementById('theme-btn').textContent = '☀️';
     }
   })();
 
