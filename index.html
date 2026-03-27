@@ -643,12 +643,67 @@
 <div class="page" id="page-concrete">
 
   <div id="con-menu-screen">
-    <div class="con-item" onclick="openConSub('slab')"><span class="ci-icon">⬜</span><span class="ci-name">Concrete Slab</span><span class="ci-arr">›</span></div>
-    <div class="con-item" onclick="openConSub('wall')"><span class="ci-icon">🧱</span><span class="ci-name">Concrete Wall</span><span class="ci-arr">›</span></div>
-    <div class="con-item" onclick="openConSub('footing')"><span class="ci-icon">🔩</span><span class="ci-name">Concrete Footing</span><span class="ci-arr">›</span></div>
-    <div class="con-item" onclick="openConSub('column')"><span class="ci-icon">🏛</span><span class="ci-name">Concrete Column</span><span class="ci-arr">›</span></div>
-    <div class="con-item" onclick="openConSub('circle')"><span class="ci-icon">⭕</span><span class="ci-name">Circle Slab</span><span class="ci-arr">›</span></div>
-    <div class="con-item" onclick="openConSub('stairs')"><span class="ci-icon">🪜</span><span class="ci-name">Concrete Stairs</span><span class="ci-arr">›</span></div>
+
+    <!-- Quick SF toggle at menu level -->
+    <div class="sf-toggle-row">
+      <button class="sf-toggle-btn active" id="con-menu-dims-btn" onclick="conMenuMode('dims',this)">Full Dimensions</button>
+      <button class="sf-toggle-btn" id="con-menu-sf-btn" onclick="conMenuMode('sf',this)">⚡ Quick SF</button>
+    </div>
+
+    <!-- Quick SF panel (shown when Quick SF selected) -->
+    <div class="hidden" id="con-menu-sf-panel">
+      <div class="quick-sf-row">
+        <div class="quick-sf-label">⚡ Enter Total Square Footage</div>
+        <div class="quick-sf-input-wrap">
+          <input class="quick-sf-input" type="number" id="con-menu-quick-sf" placeholder="e.g. 5000" inputmode="decimal" />
+          <span class="quick-sf-unit">ft²</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">Additional Inputs</div>
+        <div class="irow" style="border-top:none;"><span class="irow-lbl">Thickness / Depth</span><input type="number" id="con-menu-sf-depth" placeholder="inches" inputmode="decimal" /></div>
+        <div class="irow"><span class="irow-lbl">Mix Strength</span>
+          <select id="con-menu-sf-mix">
+            <option value="3000">3000 PSI</option>
+            <option value="3500">3500 PSI</option>
+            <option value="4000">4000 PSI</option>
+            <option value="5000">5000 PSI</option>
+          </select>
+        </div>
+        <div class="irow"><span class="irow-lbl">Cost per yard <span class="opt">optional</span></span><input type="number" id="con-menu-sf-cost" placeholder="$" inputmode="decimal" /></div>
+      </div>
+      <div class="btn-group"><button class="abtn abtn-calc" onclick="calcConQuickSF()">Calculate</button></div>
+      <div class="btn-group">
+        <button class="abtn abtn-clear" onclick="clearConQuickSF()">Clear</button>
+        <button class="abtn abtn-text"  onclick="textConQuickSF()">📱 Text</button>
+        <button class="abtn abtn-email" onclick="emailConQuickSF()">📧 Email</button>
+      </div>
+      <!-- Output -->
+      <div class="con-output" id="con-menu-output">
+        <div class="card" style="padding:16px;">
+          <div class="con-headline" id="con-menu-headline"></div>
+          <div class="con-advisory" id="con-menu-advisory"></div>
+          <div class="con-bags-msg" id="con-menu-bags-msg"></div>
+          <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px;">
+            <div class="con-drow"><span class="k">Volume</span><span class="v" id="con-menu-cuft">—</span></div>
+            <div class="con-drow"><span class="k">+8% waste</span><span class="v" id="con-menu-waste">—</span></div>
+            <div class="con-drow"><span class="k">Mix strength</span><span class="v" id="con-menu-psi">—</span></div>
+            <div class="con-drow" id="con-menu-cost-row"><span class="k">Estimated cost</span><span class="v" id="con-menu-cost-val">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menu items (shown when Full Dimensions selected) -->
+    <div id="con-menu-items">
+      <div class="con-item" onclick="openConSub('slab')"><span class="ci-icon">⬜</span><span class="ci-name">Concrete Slab</span><span class="ci-arr">›</span></div>
+      <div class="con-item" onclick="openConSub('wall')"><span class="ci-icon">🧱</span><span class="ci-name">Concrete Wall</span><span class="ci-arr">›</span></div>
+      <div class="con-item" onclick="openConSub('footing')"><span class="ci-icon">🔩</span><span class="ci-name">Concrete Footing</span><span class="ci-arr">›</span></div>
+      <div class="con-item" onclick="openConSub('column')"><span class="ci-icon">🏛</span><span class="ci-name">Concrete Column</span><span class="ci-arr">›</span></div>
+      <div class="con-item" onclick="openConSub('circle')"><span class="ci-icon">⭕</span><span class="ci-name">Circle Slab</span><span class="ci-arr">›</span></div>
+      <div class="con-item" onclick="openConSub('stairs')"><span class="ci-icon">🪜</span><span class="ci-name">Concrete Stairs</span><span class="ci-arr">›</span></div>
+    </div>
+
     <div class="note"><strong>NOTE:</strong> Always add 8–10% for waste. Cure minimum 7 days.</div>
   </div>
 
@@ -1101,6 +1156,61 @@
     document.getElementById('snd-sf-row').classList.toggle('hidden', mode==='dims');
     document.getElementById('snd-sf-extra').classList.toggle('hidden', mode==='dims');
   }
+  // ── Concrete menu level Quick SF ──
+  function conMenuMode(mode, el) {
+    document.querySelectorAll('#con-menu-screen .sf-toggle-row .sf-toggle-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('con-menu-sf-panel').classList.toggle('hidden', mode==='dims');
+    document.getElementById('con-menu-items').classList.toggle('hidden', mode==='sf');
+    clearConQuickSF();
+  }
+
+  function calcConQuickSF() {
+    const sf  = n('con-menu-quick-sf');
+    const D   = n('con-menu-sf-depth');
+    if (!sf || !D) return alert('Please enter Square Footage and Thickness.');
+    const volFt    = sf * (D / 12);
+    const volWaste = volFt * 1.08;
+    const yards    = volWaste / 27;
+    const yardsUp  = Math.ceil(yards * 4) / 4;
+    const bags     = Math.ceil(volWaste / 0.45);
+    const psi      = document.getElementById('con-menu-sf-mix').value;
+    const cpy      = n('con-menu-sf-cost');
+    setText('con-menu-headline', fmt(yardsUp) + ' cubic yards.');
+    const adEl = document.getElementById('con-menu-advisory');
+    const bgEl = document.getElementById('con-menu-bags-msg');
+    if (yards < 5) {
+      adEl.textContent = 'We have a minimum order of five cubic yards on each load. If you need less, it may cost more. Consider combining with another small project.';
+      bgEl.textContent = 'Alternative: purchase approximately ' + bags + ' bags (80 lb each).';
+      bgEl.classList.add('show');
+    } else {
+      const trucks = Math.ceil(yards / 10);
+      adEl.textContent = 'You will need approximately ' + fmt(yardsUp) + ' cubic yards — ' + trucks + ' truck load' + (trucks > 1 ? 's' : '') + ' (10 yd³ each).';
+      bgEl.classList.remove('show');
+    }
+    setText('con-menu-cuft',  fmt(volFt) + ' cu ft');
+    setText('con-menu-waste', fmt(volWaste) + ' cu ft');
+    setText('con-menu-psi',   psi + ' PSI');
+    const crow = document.getElementById('con-menu-cost-row');
+    if (cpy) { setText('con-menu-cost-val', fmtMoney(yards * cpy)); crow.style.display = ''; }
+    else { crow.style.display = 'none'; }
+    document.getElementById('con-menu-output').classList.add('show');
+  }
+
+  function clearConQuickSF() {
+    ['con-menu-quick-sf','con-menu-sf-depth','con-menu-sf-cost'].forEach(clr);
+    document.getElementById('con-menu-output').classList.remove('show');
+  }
+
+  function _conQuickBody() {
+    const hl = document.getElementById('con-menu-headline').textContent;
+    const ad = document.getElementById('con-menu-advisory').textContent;
+    const sf = n('con-menu-quick-sf'), D = n('con-menu-sf-depth');
+    return 'Concrete Quick SF Estimate\n\nSF: ' + sf + ' ft²\nThickness: ' + D + ' in\n\n' + hl + '\n\n' + ad;
+  }
+  function emailConQuickSF() { window.location.href = 'mailto:?subject=Concrete%20Estimate&body=' + encodeURIComponent(_conQuickBody()); }
+  function textConQuickSF()  { window.location.href = 'sms:?body=' + encodeURIComponent(_conQuickBody()); }
+
   function conMode(mode, el) {
     _conMode = mode;
     document.querySelectorAll('#con-sf-toggle .sf-toggle-btn').forEach(b=>b.classList.remove('active'));
