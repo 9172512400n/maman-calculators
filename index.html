@@ -957,6 +957,65 @@
 ════════════════════════════════════ -->
 <div class="page" id="page-curb">
 
+  <!-- Quick SF toggle -->
+  <div class="sf-toggle-row">
+    <button class="sf-toggle-btn active" onclick="curbMode('dims',this)">Full Dimensions</button>
+    <button class="sf-toggle-btn" onclick="curbMode('sf',this)">⚡ Quick Linear Ft</button>
+  </div>
+
+  <!-- Quick Linear Ft panel -->
+  <div class="hidden" id="curb-sf-panel">
+    <div class="quick-sf-row">
+      <div class="quick-sf-label">⚡ Enter Linear Feet of Curb</div>
+      <div class="quick-sf-input-wrap">
+        <input class="quick-sf-input" type="number" id="curb-quick-lf" placeholder="e.g. 500" inputmode="decimal" />
+        <span class="quick-sf-unit">lin ft</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">Standard Dimensions (editable)</div>
+      <div class="irow" style="border-top:none;"><span class="irow-lbl">Curb Depth (in)</span><input type="number" id="curb-q-depth" value="6" inputmode="decimal" /></div>
+      <div class="irow"><span class="irow-lbl">Curb Height (in)</span><input type="number" id="curb-q-height" value="8" inputmode="decimal" /></div>
+      <div class="irow"><span class="irow-lbl">Gutter Width (in)</span><input type="number" id="curb-q-gutter" value="18" inputmode="decimal" /></div>
+      <div class="irow"><span class="irow-lbl">Flag Thickness (in)</span><input type="number" id="curb-q-flag" value="6" inputmode="decimal" /></div>
+      <div class="irow"><span class="irow-lbl">Cost per yard <span class="opt">optional</span></span><input type="number" id="curb-q-cost" placeholder="$" inputmode="decimal" /></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Results</div>
+      <div class="results-row">
+        <div class="result-col">
+          <div class="result-lbl">Cubic Yards</div>
+          <div class="result-bar" style="background:#ffffff44;"></div>
+          <div class="result-val" id="curb-q-r-yards">—</div>
+        </div>
+        <div class="result-col">
+          <div class="result-lbl">60 lb Bags</div>
+          <div class="result-bar" style="background:var(--accent);"></div>
+          <div class="result-val" id="curb-q-r-bags60">—</div>
+        </div>
+      </div>
+      <div class="result-extras">
+        <div class="result-extra-row" style="margin-bottom:4px;">
+          <div class="result-extra-lbl"><span class="dot" style="background:#5b9bd5;"></span>80 lb Bags</div>
+          <div class="result-extra-val" id="curb-q-r-bags80">—</div>
+        </div>
+        <div class="result-extra-row">
+          <div class="result-extra-lbl"><span class="dot" style="background:var(--green);"></span>Total Cost</div>
+          <div class="result-extra-val" id="curb-q-r-cost">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-group"><button class="abtn abtn-calc" onclick="calcCurbQuick()">Calculate</button></div>
+    <div class="btn-group">
+      <button class="abtn abtn-clear" onclick="clearCurbQuick()">Clear</button>
+      <button class="abtn abtn-text"  onclick="textCurbQuick()">📱 Text</button>
+      <button class="abtn abtn-email" onclick="emailCurbQuick()">📧 Email</button>
+    </div>
+    <div class="note"><strong>NOTE:</strong> Default dimensions are standard curb & gutter. Adjust if needed.</div>
+  </div>
+
+  <!-- Full dimensions panel -->
+  <div id="curb-dims-panel">
   <div class="curb-diagram">
     <svg viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,sans-serif" font-size="11">
       <polygon points="20,155 200,155 260,120 260,145 80,180" fill="#333" stroke="#555" stroke-width="1"/>
@@ -1027,6 +1086,7 @@
   </div>
 
   <div class="note"><strong>NOTE:</strong> Cross-section = (Depth × Height) + (Gutter × Flag). Add 8% waste.</div>
+  </div><!-- end curb-dims-panel -->
 </div>
 
 <!-- ════════════════════════════════════
@@ -1441,6 +1501,43 @@
   }
   function emailSand(){ window.location.href='mailto:?subject=Sand%20%26%20Gravel%20Estimate&body='+encodeURIComponent(_sndBody()); }
   function textSand() { window.location.href='sms:?body='+encodeURIComponent(_sndBody()); }
+
+  // ── CURB MODE TOGGLE ──
+  let _curbMode = 'dims';
+  function curbMode(mode, el) {
+    _curbMode = mode;
+    document.querySelectorAll('#page-curb .sf-toggle-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('curb-sf-panel').classList.toggle('hidden', mode==='dims');
+    document.getElementById('curb-dims-panel').classList.toggle('hidden', mode==='sf');
+    clearCurbQuick();
+  }
+  function calcCurbQuick() {
+    const len = n('curb-quick-lf');
+    const cd  = n('curb-q-depth') || 6;
+    const ch  = n('curb-q-height') || 8;
+    const gw  = n('curb-q-gutter') || 18;
+    const ft  = n('curb-q-flag') || 6;
+    const cpy = n('curb-q-cost');
+    if (!len) return alert('Please enter Linear Feet.');
+    const xsecFt2 = ((cd*ch) + (gw*ft)) / 144;
+    const volFt3  = xsecFt2 * len;
+    const volWaste= volFt3 * 1.08;
+    const yards   = volWaste / 27;
+    setText('curb-q-r-yards',  fmt(yards));
+    setText('curb-q-r-bags60', Math.ceil(volWaste/0.375));
+    setText('curb-q-r-bags80', Math.ceil(volWaste/0.45));
+    setText('curb-q-r-cost',   cpy ? fmtMoney(yards*cpy) : '—');
+  }
+  function clearCurbQuick() {
+    ['curb-quick-lf','curb-q-cost'].forEach(clr);
+    ['curb-q-r-yards','curb-q-r-bags60','curb-q-r-bags80','curb-q-r-cost'].forEach(id=>setText(id,'—'));
+  }
+  function _curbQuickBody() {
+    return 'Curb & Gutter Estimate\n\nLinear Feet: '+n('curb-quick-lf')+' ft\nDepth: '+n('curb-q-depth')+' in\nHeight: '+n('curb-q-height')+' in\nGutter: '+n('curb-q-gutter')+' in\nFlag: '+n('curb-q-flag')+' in\n\nYards: '+document.getElementById('curb-q-r-yards').textContent+'\n60lb bags: '+document.getElementById('curb-q-r-bags60').textContent+'\n80lb bags: '+document.getElementById('curb-q-r-bags80').textContent+'\nTotal Cost: '+document.getElementById('curb-q-r-cost').textContent;
+  }
+  function emailCurbQuick() { window.location.href='mailto:?subject=Curb%20%26%20Gutter%20Estimate&body='+encodeURIComponent(_curbQuickBody()); }
+  function textCurbQuick()  { window.location.href='sms:?body='+encodeURIComponent(_curbQuickBody()); }
 
   // ── CURB & GUTTER ──
   function calcCurb(){
