@@ -4,95 +4,113 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Maman Calculators</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <style>
+    /* ════════════════════════════════════════
+       MAMAN CALCULATORS — Original Design
+    ════════════════════════════════════════ */
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* ── CSS Variables: Light (default) ── */
+    /* ── Light mode variables ── */
     :root {
-      --bg:          #e8e8e8;
-      --bg2:         #f0f0f0;
-      --surface:     #fff;
-      --surface2:    #fafafa;
-      --output-bg:   #e0e0e0;
-      --border:      #d0d0d0;
-      --border2:     #e0e0e0;
-      --text:        #111;
-      --text2:       #333;
-      --muted:       #888;
-      --muted2:      #aaa;
-      --input-bg:    #fff;
-      --input-text:  #111;
-      --placeholder: #bbb;
-      --header-bg:   #111;
-      --nav-bg:      #2a2a2a;
-      --select-bg:   #fff;
-      --note-bg:     #fff;
-      --note-border: #ddd;
-      --shape-bg:    #e8e8e8;
-      --curb-border: #ccc;
-      --curb-bg:     #f0f0f0;
-      --con-menu-bg: #fff;
-      --con-menu-border: #ddd;
-      --sub-bg:      #fff;
-      --meas-card-bg: #fff;
-      --meas-total-bg: #fff;
-      --area-row-bg: #fff;
-      --area-row-border: #e0e0e0;
-      --area-dim-bg: #fafafa;
-      --area-dim-border: #ddd;
-      --price-result-bg: #f8fff8;
-      --price-result-border: #c8e6c9;
+      --bg:               #F2F3F7;
+      --bg2:              #ECEDF2;
+      --surface:          #FFFFFF;
+      --surface2:         #F9F9FB;
+      --output-bg:        #FFF8EC;
+      --border:           #E2E4EA;
+      --border2:          #ECEDF2;
+      --text:             #12122A;
+      --text2:            #3a3a5c;
+      --muted:            #7a7a9a;
+      --muted2:           #a0a0b8;
+      --input-bg:         #FFFFFF;
+      --input-text:       #12122A;
+      --placeholder:      #b0b0c8;
+      --header-bg:        #12122A;
+      --nav-bg:           #1A1A2E;
+      --select-bg:        #FFFFFF;
+      --note-bg:          #FFF8EC;
+      --note-border:      #E8A020;
+      --shape-bg:         #F2F3F7;
+      --curb-border:      #E2E4EA;
+      --curb-bg:          #F9F9FB;
+      --con-menu-bg:      #FFFFFF;
+      --con-menu-border:  #E2E4EA;
+      --sub-bg:           #FFFFFF;
+      --meas-card-bg:     #FFFFFF;
+      --meas-total-bg:    #FFFFFF;
+      --area-row-bg:      #FFFFFF;
+      --area-row-border:  #E2E4EA;
+      --area-dim-bg:      #F9F9FB;
+      --area-dim-border:  #E2E4EA;
+      --price-result-bg:  #FFF8EC;
+      --price-result-border: #E8A020;
+      --accent:           #E8A020;
+      --accent-dark:      #c07010;
+      --accent-bg:        #FFF8EC;
+      --navy:             #12122A;
+      --card-shadow:      0 2px 8px rgba(18,18,42,0.07);
     }
 
-    /* ── CSS Variables: Dark ── */
+    /* ── Dark mode variables ── */
     body.dark {
-      --bg:          #1a1a1a;
-      --bg2:         #141414;
-      --surface:     #2a2a2a;
-      --surface2:    #333;
-      --output-bg:   #222;
-      --border:      #3a3a3a;
-      --border2:     #333;
-      --text:        #f0f0f0;
-      --text2:       #ccc;
-      --muted:       #888;
-      --muted2:      #666;
-      --input-bg:    #333;
-      --input-text:  #f0f0f0;
-      --placeholder: #555;
-      --header-bg:   #0a0a0a;
-      --nav-bg:      #1a1a1a;
-      --select-bg:   #333;
-      --note-bg:     #222;
-      --note-border: #3a3a3a;
-      --shape-bg:    #1a1a1a;
-      --curb-border: #3a3a3a;
-      --curb-bg:     #222;
-      --con-menu-bg: #2a2a2a;
-      --con-menu-border: #3a3a3a;
-      --sub-bg:      #2a2a2a;
-      --meas-card-bg: #2a2a2a;
-      --meas-total-bg: #2a2a2a;
-      --area-row-bg: #2a2a2a;
-      --area-row-border: #3a3a3a;
-      --area-dim-bg: #333;
-      --area-dim-border: #444;
-      --price-result-bg: #1a2a1a;
-      --price-result-border: #2a4a2a;
+      --bg:               #0d0d1a;
+      --bg2:              #080810;
+      --surface:          #16162a;
+      --surface2:         #1e1e32;
+      --output-bg:        #1a1500;
+      --border:           #2a2a42;
+      --border2:          #222238;
+      --text:             #e8e8f8;
+      --text2:            #b0b0d0;
+      --muted:            #6a6a8a;
+      --muted2:           #4a4a6a;
+      --input-bg:         #1e1e32;
+      --input-text:       #e8e8f8;
+      --placeholder:      #44446a;
+      --header-bg:        #08080f;
+      --nav-bg:           #0d0d1a;
+      --select-bg:        #1e1e32;
+      --note-bg:          #1a1400;
+      --note-border:      #E8A020;
+      --shape-bg:         #0d0d1a;
+      --curb-border:      #2a2a42;
+      --curb-bg:          #16162a;
+      --con-menu-bg:      #16162a;
+      --con-menu-border:  #2a2a42;
+      --sub-bg:           #16162a;
+      --meas-card-bg:     #16162a;
+      --meas-total-bg:    #16162a;
+      --area-row-bg:      #16162a;
+      --area-row-border:  #2a2a42;
+      --area-dim-bg:      #1e1e32;
+      --area-dim-border:  #2a2a42;
+      --price-result-bg:  #1a1400;
+      --price-result-border: #E8A020;
+      --accent:           #E8A020;
+      --accent-dark:      #c07010;
+      --accent-bg:        #1a1400;
+      --navy:             #e8e8f8;
+      --card-shadow:      0 2px 12px rgba(0,0,0,0.3);
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      transition: background 0.25s, color 0.25s;
+      transition: background 0.2s ease, color 0.2s ease;
     }
 
-    /* ── App header ── */
+    /* ══════════════════════════════════════
+       HEADER
+    ══════════════════════════════════════ */
     .app-header {
       background: var(--header-bg);
-      padding: 12px 20px;
+      padding: 14px 20px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -100,612 +118,591 @@
       position: relative;
     }
     .app-header-logo {
-      width: 46px;
-      height: 46px;
+      width: 40px; height: 40px;
       object-fit: contain;
       border-radius: 8px;
     }
-    .app-header-text {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.15;
-    }
+    .app-header-text { display: flex; flex-direction: column; line-height: 1.2; }
     .app-header-name {
-      font-size: 22px;
-      font-weight: 900;
-      color: #fff;
-      letter-spacing: 1px;
-      text-transform: uppercase;
+      font-size: 20px; font-weight: 900;
+      color: #fff; letter-spacing: 2px; text-transform: uppercase;
     }
     .app-header-sub {
-      font-size: 11px;
-      font-weight: 600;
-      color: #aaa;
-      letter-spacing: 2px;
-      text-transform: uppercase;
+      font-size: 10px; font-weight: 600;
+      color: var(--accent); letter-spacing: 3px; text-transform: uppercase;
     }
-
-    /* ── Dark/Light toggle ── */
     .theme-toggle {
-      position: absolute;
-      right: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 20px;
-      padding: 6px 12px;
-      font-size: 18px;
-      cursor: pointer;
-      line-height: 1;
-      transition: background 0.2s;
-      user-select: none;
+      position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+      background: rgba(232,160,32,0.15);
+      border: 1.5px solid var(--accent);
+      border-radius: 20px; padding: 5px 11px;
+      font-size: 16px; cursor: pointer; line-height: 1;
+      transition: background 0.2s; user-select: none;
     }
-    .theme-toggle:active { background: rgba(255,255,255,0.22); }
+    .theme-toggle:active { background: rgba(232,160,32,0.3); }
 
-    /* ── Top nav tabs ── */
+    /* ══════════════════════════════════════
+       NAV TABS
+    ══════════════════════════════════════ */
     .nav {
       display: flex;
       background: var(--nav-bg);
-      transition: background 0.25s;
+      border-bottom: 1px solid rgba(232,160,32,0.15);
+      transition: background 0.2s;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
+    .nav::-webkit-scrollbar { display: none; }
     .nav-btn {
-      flex: 1;
-      padding: 14px 4px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #888;
-      text-align: center;
-      cursor: pointer;
+      flex: 1; flex-shrink: 0;
+      padding: 13px 4px;
+      font-size: 12px; font-weight: 700;
+      color: var(--muted);
+      text-align: center; cursor: pointer;
       border-bottom: 3px solid transparent;
-      transition: all 0.18s;
-      user-select: none;
-      letter-spacing: 0.2px;
+      transition: all 0.18s; user-select: none;
+      letter-spacing: 0.5px; text-transform: uppercase;
     }
-    .nav-btn.active { color: #fff; border-bottom-color: #4caf50; }
+    .nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-    /* ── Pages ── */
+    /* ══════════════════════════════════════
+       PAGES
+    ══════════════════════════════════════ */
     .page { display: none; }
     .page.active { display: block; }
 
-    /* ── Hero header with bg image ── */
+    /* ══════════════════════════════════════
+       HERO (gradient, no image)
+    ══════════════════════════════════════ */
     .calc-hero {
       position: relative;
-      background-size: cover;
-      background-position: center;
-      padding: 22px 20px 20px;
+      padding: 28px 20px 24px;
       text-align: center;
+      overflow: hidden;
     }
-    .calc-hero::before {
+    .calc-hero::after {
       content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.45);
+      position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 60px; height: 3px;
+      background: var(--accent); border-radius: 2px;
     }
     .calc-hero h1 {
       position: relative;
-      font-size: 22px;
-      font-weight: 800;
-      color: #fff;
-      letter-spacing: 0.3px;
+      font-size: 24px; font-weight: 900;
+      color: #fff; letter-spacing: 0.5px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      padding-bottom: 12px;
+    }
+    #page-asphalt   .calc-hero { background: linear-gradient(135deg, #12122A 0%, #2a2a50 100%); }
+    #page-concrete  .calc-hero { background: linear-gradient(135deg, #0f1f0f 0%, #1e3a1e 100%); }
+    #page-sand      .calc-hero { background: linear-gradient(135deg, #1f1006 0%, #3a2010 100%); }
+    #page-curb      .calc-hero { background: linear-gradient(135deg, #081420 0%, #0d2840 100%); }
+    #page-sqft      .calc-hero { background: linear-gradient(135deg, #12122A 0%, #251235 100%); }
+
+    /* ══════════════════════════════════════
+       FORM BODY + CARDS
+    ══════════════════════════════════════ */
+    .calc-body { padding: 16px 0 50px; background: var(--bg); transition: background 0.2s; }
+
+    /* Card wrapper — replaces the old flat rows */
+    .field-card {
+      background: var(--surface);
+      border-radius: 14px;
+      margin: 0 14px 12px;
+      padding: 14px 16px;
+      box-shadow: var(--card-shadow);
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .field-card-title {
+      font-size: 10px; font-weight: 800;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 14px;
     }
 
-    /* bg images per tab */
-    #page-asphalt .calc-hero {
-      background-image: url('https://images.unsplash.com/photo-1504893524553-b855bce32c67?w=800&q=80');
-    }
-    #page-concrete .calc-hero {
-      background-image: url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80');
-    }
-    #page-sand .calc-hero {
-      background-image: url('https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=800&q=80');
-    }
-    #page-curb .calc-hero {
-      background-image: url('https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=800&q=80');
-    }
-
-    /* Curb diagram */
-    .curb-diagram {
-      margin: 20px 16px 4px;
-      border-radius: 10px;
-      overflow: hidden;
-      border: 1px solid var(--curb-border);
-      background: var(--curb-bg);
-      transition: background 0.25s, border-color 0.25s;
-    }
-    .curb-diagram svg { display: block; width: 100%; height: auto; }
-
-    /* ── Form body ── */
-    .calc-body { padding: 0 0 40px; background: var(--bg); transition: background 0.25s; }
-
-    /* ── Row: label left, input right ── */
+    /* ── Old form-row: stacked label+input ── */
     .form-row {
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      padding: 0;
+      min-height: unset;
+      border-bottom: none;
+      margin-bottom: 14px;
       background: transparent;
-      padding: 0 16px;
-      min-height: 56px;
-      border-bottom: 1px solid var(--border);
-      transition: border-color 0.25s;
     }
-    .form-row:first-child { border-top: 1px solid var(--border); margin-top: 0; }
+    .form-row:last-child { margin-bottom: 0; }
+    .form-row:first-child { border-top: none; }
     .form-row .lbl {
-      flex: 1;
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text);
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 6px;
     }
     .form-row input {
-      width: 160px;
+      width: 100%;
       background: var(--input-bg);
-      border: none;
-      border-radius: 6px;
-      padding: 10px 12px;
-      font-size: 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 14px;
+      font-size: 16px; font-family: inherit;
       color: var(--input-text);
       outline: none;
-      text-align: left;
-      transition: background 0.25s, color 0.25s;
+      transition: border-color 0.2s, background 0.2s;
     }
-    .form-row input::placeholder { color: var(--placeholder); font-weight: 400; }
-    .form-row input:focus { box-shadow: 0 0 0 2px #4caf5066; }
+    .form-row input::placeholder { color: var(--placeholder); }
+    .form-row input:focus {
+      border-color: var(--accent);
+      border-left: 3px solid var(--accent);
+    }
 
     /* output rows */
-    .form-row.output-row { background: var(--output-bg); }
-    .form-row.output-row .lbl { color: var(--text2); }
+    .form-row.output-row .lbl { color: var(--accent); }
     .form-row.output-row input {
-      background: var(--surface);
-      color: var(--text);
-      font-weight: 700;
+      background: var(--output-bg);
+      border-color: var(--accent);
+      border-left: 3px solid var(--accent);
+      color: var(--text); font-weight: 700;
     }
+    .form-row.output-row { background: transparent; }
 
-    /* divider gap */
-    .row-gap { height: 18px; border: none; background: transparent; }
-
-    /* shape selector */
-    .shape-row {
-      display: flex;
-      gap: 8px;
+    /* Output card tint */
+    .output-card {
+      background: var(--output-bg);
+      border-radius: 14px;
+      margin: 0 14px 12px;
       padding: 14px 16px;
-      background: var(--shape-bg);
-      border-bottom: 1px solid var(--border);
-      transition: background 0.25s;
+      border-left: 4px solid var(--accent);
+      box-shadow: var(--card-shadow);
+    }
+    .output-card .field-card-title { color: var(--accent); }
+
+    .row-gap { height: 4px; background: transparent; }
+
+    /* ── Shape selector ── */
+    .shape-row {
+      display: flex; gap: 8px;
+      padding: 0; margin: 0 14px 12px;
+      background: transparent; border-bottom: none;
     }
     .shape-btn {
-      flex: 1;
-      padding: 9px 4px;
+      flex: 1; padding: 10px 6px;
       border: 1.5px solid var(--border);
-      border-radius: 8px;
+      border-radius: 10px;
       background: var(--surface);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--muted);
-      text-align: center;
+      font-size: 12px; font-weight: 700;
+      color: var(--muted); text-align: center;
       cursor: pointer;
-      transition: background 0.2s, color 0.2s;
+      transition: all 0.15s;
+      box-shadow: var(--card-shadow);
     }
-    .shape-btn.active { border-color: #4caf50; color: #4caf50; background: var(--surface); }
+    .shape-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      border-left: 3px solid var(--accent);
+      background: var(--accent-bg);
+    }
 
-    /* PSI select row */
+    /* ── Select row ── */
     .select-row {
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      min-height: 56px;
-      border-bottom: 1px solid var(--border);
-      background: transparent;
+      display: flex; flex-direction: column;
+      padding: 0; min-height: unset;
+      border-bottom: none; background: transparent;
+      margin-bottom: 14px;
     }
-    .select-row .lbl { flex: 1; font-size: 16px; font-weight: 600; color: var(--text); }
+    .select-row .lbl {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 6px;
+    }
     .select-row select {
-      width: 160px;
+      width: 100%;
       background: var(--select-bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 10px 10px;
-      font-size: 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 36px 13px 14px;
+      font-size: 15px; font-family: inherit;
       color: var(--input-text);
-      outline: none;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 8px center;
-      padding-right: 28px;
-      transition: background 0.25s, color 0.25s;
+      outline: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23E8A020' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      transition: border-color 0.2s, background 0.2s;
     }
+    .select-row select:focus { border-color: var(--accent); }
 
-    /* ── Buttons ── */
+    /* ══════════════════════════════════════
+       BUTTONS
+    ══════════════════════════════════════ */
     .btn-row {
-      display: flex;
-      gap: 10px;
-      padding: 18px 16px 0;
+      display: flex; gap: 10px;
+      padding: 6px 14px 0;
     }
     .btn {
-      flex: 1;
-      padding: 16px 8px;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: 800;
-      cursor: pointer;
-      letter-spacing: 0.3px;
-      transition: opacity 0.15s;
-    }
-    .btn:active { opacity: 0.8; }
-    .btn-calc  { background: #4caf50; color: #fff; flex: 2; }
-    .btn-clear { background: #e53935; color: #fff; }
-    .btn-email { background: #757575; color: #fff; }
-
-    /* ── Concrete menu ── */
-    .con-menu { padding: 16px; }
-    .con-menu-item {
-      display: flex;
-      align-items: center;
-      background: var(--con-menu-bg);
-      border: 1px solid var(--con-menu-border);
+      flex: 1; padding: 16px 8px;
       border-radius: 12px;
-      padding: 18px 16px;
-      margin-bottom: 12px;
-      cursor: pointer;
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--text);
-      transition: background 0.15s, border-color 0.25s;
-      user-select: none;
+      font-size: 16px; font-weight: 800;
+      font-family: inherit; cursor: pointer;
+      letter-spacing: 0.3px; transition: all 0.15s;
     }
-    .con-menu-item:active { opacity: 0.75; }
-    .con-menu-item .icon { font-size: 22px; margin-right: 14px; }
-    .con-menu-item .chevron { margin-left: auto; color: var(--muted2); font-size: 18px; }
-
-    /* ── Back button ── */
-    .back-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 14px 16px;
-      font-size: 16px;
-      font-weight: 700;
-      color: #c0392b;
-      cursor: pointer;
-      background: none;
+    .btn:active { transform: scale(0.97); }
+    .btn-calc {
+      flex: 2;
+      background: var(--accent);
+      color: var(--navy);
       border: none;
-      user-select: none;
+      box-shadow: 0 4px 14px rgba(232,160,32,0.35);
     }
-    .back-btn:active { opacity: 0.7; }
-
-    /* ── Sub-form header ── */
-    .sub-header {
-      background: var(--sub-bg);
-      border-bottom: 1px solid var(--border2);
-      display: flex;
-      align-items: center;
-      transition: background 0.25s;
+    .btn-calc:active { background: var(--accent-dark); }
+    .btn-clear {
+      background: transparent;
+      border: 2px solid #e53935;
+      color: #e53935;
     }
-    .sub-header-title {
-      flex: 1;
-      text-align: center;
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--text);
-      padding-right: 60px;
-    }
-
-    /* ── Concrete advisory text output ── */
-    .con-output {
-      display: none;
-      padding: 20px 16px 0;
-    }
-    .con-output.show { display: block; }
-    .con-headline { font-size: 20px; font-weight: 800; color: #111; margin-bottom: 14px; }
-    .con-advisory { font-size: 15px; font-weight: 600; color: #333; line-height: 1.6; margin-bottom: 12px; }
-    .con-bags-msg { font-size: 15px; font-weight: 600; color: #333; line-height: 1.6; margin-bottom: 12px; display: none; }
-    .con-bags-msg.show { display: block; }
-    .con-detail {
-      border-top: 1px solid #ccc;
-      margin-top: 14px;
-      padding-top: 10px;
-    }
-    .con-detail-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 6px 0;
-      font-size: 14px;
-      border-bottom: 1px solid #e5e5e5;
-    }
-    .con-detail-row:last-child { border: none; }
-    .con-detail-row .k { color: #666; }
-    .con-detail-row .v { font-weight: 700; color: #111; }
-
-    /* ── Note ── */
-    .note {
-      margin: 20px 16px 0;
-      background: var(--note-bg);
-      border: 1px solid var(--note-border);
-      border-radius: 10px;
-      padding: 14px;
-      font-size: 13px;
+    .btn-email {
+      background: transparent;
+      border: 2px solid var(--muted);
       color: var(--muted);
-      line-height: 1.6;
-      transition: background 0.25s, border-color 0.25s;
+    }
+
+    /* ══════════════════════════════════════
+       NOTE BOX
+    ══════════════════════════════════════ */
+    .note {
+      margin: 16px 14px 0;
+      background: var(--note-bg);
+      border-left: 4px solid var(--accent);
+      border-radius: 0 10px 10px 0;
+      padding: 12px 14px;
+      font-size: 12px; color: var(--muted);
+      line-height: 1.6; transition: background 0.2s;
     }
     .note strong { color: var(--text); }
 
-    /* ── Measurements Calculator ── */
-    #page-sqft {
-      background: var(--bg2);
-      min-height: 100vh;
-      padding-bottom: 60px;
-      transition: background 0.25s;
+    /* ══════════════════════════════════════
+       CURB DIAGRAM
+    ══════════════════════════════════════ */
+    .curb-diagram {
+      margin: 0 14px 12px;
+      border-radius: 14px; overflow: hidden;
+      border: 1.5px solid var(--curb-border);
+      background: var(--curb-bg);
+      box-shadow: var(--card-shadow);
+      transition: background 0.2s, border-color 0.2s;
     }
+    .curb-diagram svg { display: block; width: 100%; height: auto; }
 
-    .meas-hero {
-      position: relative;
-      background: url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80') center/cover;
-      padding: 22px 20px 20px;
-      text-align: center;
-    }
-    .meas-hero::before { content:''; position:absolute; inset:0; background:rgba(0,0,0,0.5); }
-    .meas-hero h1 { position:relative; font-size:22px; font-weight:800; color:#fff; }
-
-    /* area list */
-    .meas-body { padding: 0 16px; }
-    .meas-section-lbl {
-      font-size: 12px; font-weight: 700; letter-spacing: 1px;
-      color: var(--muted); text-transform: uppercase;
-      padding: 18px 0 10px;
-    }
-
-    /* each area row */
-    .area-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--area-row-bg);
+    /* ══════════════════════════════════════
+       CONCRETE MENU
+    ══════════════════════════════════════ */
+    .con-menu { padding: 8px 14px; }
+    .con-menu-item {
+      display: flex; align-items: center;
+      background: var(--con-menu-bg);
+      border: 1.5px solid var(--con-menu-border);
+      border-left: 4px solid var(--accent);
       border-radius: 12px;
-      padding: 10px 12px;
-      margin-bottom: 10px;
-      border: 1px solid var(--area-row-border);
-      transition: background 0.25s, border-color 0.25s;
+      padding: 16px 14px; margin-bottom: 10px;
+      cursor: pointer; font-size: 16px;
+      font-weight: 700; color: var(--text);
+      box-shadow: var(--card-shadow);
+      transition: all 0.15s; user-select: none;
+    }
+    .con-menu-item:active { opacity: 0.75; transform: scale(0.98); }
+    .con-menu-item .icon { font-size: 22px; margin-right: 14px; }
+    .con-menu-item .chevron { margin-left: auto; color: var(--accent); font-size: 18px; font-weight: 900; }
+
+    /* ── Back button / Sub-header ── */
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 14px 16px; font-size: 15px; font-weight: 700;
+      color: var(--accent); cursor: pointer;
+      background: none; border: none; font-family: inherit;
+      user-select: none;
+    }
+    .back-btn:active { opacity: 0.7; }
+    .sub-header {
+      background: var(--sub-bg);
+      border-bottom: 1px solid var(--border2);
+      display: flex; align-items: center;
+      transition: background 0.2s;
+    }
+    .sub-header-title {
+      flex: 1; text-align: center;
+      font-size: 17px; font-weight: 800;
+      color: var(--text); padding-right: 60px;
+    }
+
+    /* ══════════════════════════════════════
+       CONCRETE OUTPUT (advisory)
+    ══════════════════════════════════════ */
+    .con-output { display: none; padding: 16px 14px 0; }
+    .con-output.show { display: block; }
+    .con-headline {
+      font-size: 28px; font-weight: 900; color: var(--accent);
+      margin-bottom: 12px; line-height: 1.1;
+    }
+    .con-advisory {
+      font-size: 15px; font-weight: 500; color: var(--text2);
+      line-height: 1.7; margin-bottom: 10px;
+    }
+    .con-bags-msg {
+      font-size: 14px; font-weight: 600; color: var(--muted);
+      line-height: 1.6; margin-bottom: 12px; display: none;
+    }
+    .con-bags-msg.show { display: block; }
+    .con-detail { border-top: 1px solid var(--border); margin-top: 14px; padding-top: 12px; }
+    .con-detail-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; font-size: 14px;
+      border-bottom: 1px solid var(--border2);
+    }
+    .con-detail-row:last-child { border: none; }
+    .con-detail-row .k { color: var(--muted); }
+    .con-detail-row .v { font-weight: 700; color: var(--text); }
+
+    /* ══════════════════════════════════════
+       MEASUREMENTS TAB
+    ══════════════════════════════════════ */
+    #page-sqft { background: var(--bg2); min-height: 100vh; padding-bottom: 60px; transition: background 0.2s; }
+
+    .meas-hero { padding: 28px 20px 24px; text-align: center; }
+
+    .meas-body { padding: 0 14px; }
+
+    .meas-section-lbl {
+      font-size: 10px; font-weight: 800; letter-spacing: 1.5px;
+      color: var(--muted); text-transform: uppercase; padding: 18px 0 10px;
+    }
+
+    .area-row {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--area-row-bg);
+      border-radius: 12px; padding: 10px 12px; margin-bottom: 10px;
+      border: 1.5px solid var(--area-row-border);
+      border-left: 4px solid var(--accent);
+      box-shadow: var(--card-shadow);
+      transition: background 0.2s, border-color 0.2s;
     }
     .area-row .area-num {
-      width: 24px; height: 24px;
-      background: var(--output-bg); border-radius: 50%;
-      font-size: 12px; font-weight: 800; color: var(--muted);
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
+      width: 26px; height: 26px;
+      background: var(--accent); border-radius: 50%;
+      font-size: 12px; font-weight: 800; color: var(--navy);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .area-name-input {
-      flex: 1.2;
-      border: none; outline: none;
+      flex: 1.2; border: none; outline: none;
       font-size: 14px; font-weight: 600; color: var(--text);
-      background: transparent;
-      min-width: 0;
+      background: transparent; min-width: 0; font-family: inherit;
     }
     .area-name-input::placeholder { color: var(--placeholder); font-weight: 400; }
-    .area-dim {
-      display: flex; align-items: center; gap: 4px;
-      flex: 1.4;
-    }
+    .area-dim { display: flex; align-items: center; gap: 4px; flex: 1.4; }
     .area-dim input {
-      width: 54px;
-      border: 1px solid var(--area-dim-border); border-radius: 7px;
+      width: 52px;
+      border: 1.5px solid var(--area-dim-border); border-radius: 8px;
       padding: 8px 6px; font-size: 15px; color: var(--input-text);
       text-align: center; outline: none; background: var(--area-dim-bg);
-      transition: background 0.25s, color 0.25s;
+      font-family: inherit; transition: border-color 0.2s;
     }
-    .area-dim input:focus { border-color: #4caf50; }
-    .area-dim .x-sep { font-size: 14px; color: var(--muted); font-weight: 700; }
+    .area-dim input:focus { border-color: var(--accent); }
+    .area-dim .x-sep { font-size: 14px; color: var(--accent); font-weight: 800; }
     .area-dim .dim-unit { font-size: 11px; color: var(--muted2); }
     .area-sf {
-      width: 62px; text-align: right;
-      font-size: 15px; font-weight: 800; color: #4caf50;
-      flex-shrink: 0;
+      width: 64px; text-align: right;
+      font-size: 14px; font-weight: 800; color: var(--accent); flex-shrink: 0;
     }
     .area-del {
       width: 28px; height: 28px;
-      background: #ffe5e5; border: none; border-radius: 50%;
-      font-size: 14px; color: #e53935; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
+      background: rgba(229,57,53,0.1); border: none; border-radius: 50%;
+      font-size: 13px; color: #e53935; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
 
-    /* add row button */
     .add-area-btn {
       width: 100%;
       background: var(--surface);
-      border: 2px dashed var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      font-size: 15px; font-weight: 700; color: var(--muted);
-      cursor: pointer; margin-bottom: 18px;
-      transition: background 0.2s;
+      border: 2px dashed var(--accent);
+      border-radius: 12px; padding: 14px;
+      font-size: 14px; font-weight: 700; color: var(--accent);
+      cursor: pointer; margin-bottom: 18px; font-family: inherit;
+      transition: background 0.15s;
     }
-    .add-area-btn:active { opacity: 0.75; }
+    .add-area-btn:active { background: var(--accent-bg); }
 
-    /* totals bar */
     .meas-totals {
       background: var(--meas-total-bg);
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 16px;
-      border: 1px solid var(--border2);
-      transition: background 0.25s, border-color 0.25s;
+      border-radius: 14px; padding: 16px; margin-bottom: 14px;
+      border-left: 4px solid var(--accent);
+      box-shadow: var(--card-shadow);
+      transition: background 0.2s;
     }
     .meas-totals-title {
-      font-size: 12px; font-weight: 700; letter-spacing: 1px;
-      color: var(--muted); text-transform: uppercase; margin-bottom: 14px;
+      font-size: 10px; font-weight: 800; letter-spacing: 1.5px;
+      color: var(--accent); text-transform: uppercase; margin-bottom: 14px;
     }
     .meas-total-row {
-      display: flex; justify-content: space-between;
-      align-items: center; padding: 6px 0;
-      border-bottom: 1px solid var(--border2); font-size: 15px;
-      transition: border-color 0.25s;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 7px 0; border-bottom: 1px solid var(--border2); font-size: 14px;
+      transition: border-color 0.2s;
     }
     .meas-total-row:last-child { border: none; }
-    .meas-total-row .tk { color: var(--text2); font-weight: 600; }
+    .meas-total-row .tk { color: var(--muted); font-weight: 600; }
     .meas-total-row .tv { font-weight: 800; color: var(--text); }
-    .meas-total-row .tv.green { color: #4caf50; font-size: 18px; }
+    .meas-total-row .tv.green { color: var(--accent); font-size: 20px; }
     .meas-total-row .tv.orange { color: #f59e0b; }
 
-    /* price inputs */
     .meas-price-card {
       background: var(--meas-card-bg);
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 16px;
-      border: 1px solid var(--border2);
-      transition: background 0.25s, border-color 0.25s;
+      border-radius: 14px; padding: 16px; margin-bottom: 14px;
+      box-shadow: var(--card-shadow);
+      transition: background 0.2s;
     }
     .meas-price-title {
-      font-size: 12px; font-weight: 700; letter-spacing: 1px;
+      font-size: 10px; font-weight: 800; letter-spacing: 1.5px;
       color: var(--muted); text-transform: uppercase; margin-bottom: 14px;
     }
     .price-input-row {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+      display: flex; flex-direction: column; margin-bottom: 12px;
     }
-    .price-input-row label { flex: 1; font-size: 15px; font-weight: 600; color: var(--text2); }
+    .price-input-row label {
+      font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+    }
     .price-input-row input {
-      width: 130px;
-      border: 1.5px solid var(--border); border-radius: 9px;
-      padding: 11px 12px; font-size: 16px; color: var(--input-text);
-      outline: none; text-align: right;
-      background: var(--input-bg);
-      transition: background 0.25s, color 0.25s;
+      width: 100%;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; font-size: 16px; color: var(--input-text);
+      outline: none; background: var(--input-bg); font-family: inherit;
+      transition: border-color 0.2s, background 0.2s;
     }
-    .price-input-row input:focus { border-color: #4caf50; }
+    .price-input-row input:focus { border-color: var(--accent); border-left: 3px solid var(--accent); }
     .price-result-row {
-      display: flex; justify-content: space-between;
-      align-items: center; background: var(--price-result-bg);
-      border: 1px solid var(--price-result-border); border-radius: 10px;
-      padding: 14px 16px; margin-top: 4px;
-      transition: background 0.25s;
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--price-result-bg);
+      border: 1.5px solid var(--price-result-border);
+      border-left: 4px solid var(--accent);
+      border-radius: 12px; padding: 14px 16px; margin-top: 4px;
+      transition: background 0.2s;
     }
-    .price-result-row .pr-lbl { font-size: 15px; font-weight: 700; color: var(--text2); }
-    .price-result-row .pr-val { font-size: 20px; font-weight: 800; color: #4caf50; }
+    .price-result-row .pr-lbl { font-size: 14px; font-weight: 700; color: var(--text2); }
+    .price-result-row .pr-val { font-size: 22px; font-weight: 900; color: var(--accent); }
 
-    /* bottom buttons */
-    .meas-btn-row {
-      display: flex; gap: 10px; margin-bottom: 10px;
+    /* ══════════════════════════════════════
+       CALCULATE MATERIAL BUTTON
+    ══════════════════════════════════════ */
+    .meas-calc-mat-btn {
+      display: block; width: 100%;
+      padding: 18px; margin-bottom: 14px;
+      background: linear-gradient(135deg, #E8A020, #c07010);
+      color: var(--navy);
+      font-size: 16px; font-weight: 900; font-family: inherit;
+      border: none; border-radius: 14px; cursor: pointer;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 16px rgba(232,160,32,0.4);
+      transition: opacity 0.15s, transform 0.15s;
     }
+    .meas-calc-mat-btn:active { opacity: 0.85; transform: scale(0.98); }
+
+    .meas-btn-row { display: flex; gap: 10px; margin-bottom: 10px; }
     .meas-btn {
       flex: 1; padding: 16px 8px;
-      border: none; border-radius: 12px;
-      font-size: 15px; font-weight: 800; cursor: pointer;
-      transition: opacity 0.15s;
+      border-radius: 12px; font-size: 15px; font-weight: 800;
+      font-family: inherit; cursor: pointer; transition: all 0.15s;
     }
-    .meas-btn:active { opacity: 0.75; }
-    .meas-btn-calc  { background: #4caf50; color: #fff; flex: 2; }
-    .meas-btn-clear { background: #e53935; color: #fff; }
-    .meas-btn-email { background: #616161; color: #fff; }
-    .meas-btn-text  { background: #1565c0; color: #fff; }
+    .meas-btn:active { transform: scale(0.97); }
+    .meas-btn-calc  { background: var(--accent); color: var(--navy); border: none; flex: 2; }
+    .meas-btn-clear { background: transparent; border: 2px solid #e53935; color: #e53935; }
+    .meas-btn-email { background: transparent; border: 2px solid var(--muted); color: var(--muted); }
+    .meas-btn-text  { background: transparent; border: 2px solid #1565c0; color: #1565c0; }
 
-    /* sqft bottom buttons (keep for compat) */
-    .sqft-btn-row { display:flex; gap:10px; padding:10px 14px 0; }
-    .sqft-btn { flex:1; padding:18px 8px; border:none; border-radius:12px; font-size:16px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:opacity 0.15s; }
-    .sqft-btn:active { opacity:0.75; }
-    .sqft-btn-clear { background:#8b1a1a; color:#ff6b6b; }
-    .sqft-btn-text  { background:#1a5e2a; color:#4caf50; }
-    .sqft-btn-email { background:#1a2e5e; color:#5b9bd5; }
-
-    /* ── Calculate Material button ── */
-    .meas-calc-mat-btn {
-      display: block;
-      width: 100%;
-      padding: 18px;
-      margin-bottom: 14px;
-      background: linear-gradient(135deg, #1565c0, #0d47a1);
-      color: #fff;
-      font-size: 17px;
-      font-weight: 800;
-      border: none;
-      border-radius: 14px;
-      cursor: pointer;
-      letter-spacing: 0.3px;
-      box-shadow: 0 4px 14px rgba(21,101,192,0.35);
-      transition: opacity 0.15s;
-    }
-    .meas-calc-mat-btn:active { opacity: 0.85; }
-
-    /* ── Picker overlay ── */
+    /* ══════════════════════════════════════
+       CALCULATOR PICKER SHEET
+    ══════════════════════════════════════ */
     .picker-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 999;
-      display: flex;
-      align-items: flex-end;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55); z-index: 999;
+      display: flex; align-items: flex-end;
       animation: fadeIn 0.18s ease;
     }
     @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
-
     .picker-sheet {
       width: 100%;
       background: var(--surface);
       border-radius: 22px 22px 0 0;
-      padding: 12px 20px 40px;
+      padding: 12px 16px 40px;
       animation: slideUp 0.22s ease;
-      transition: background 0.25s;
+      transition: background 0.2s;
     }
     @keyframes slideUp { from { transform:translateY(100%) } to { transform:translateY(0) } }
-
     .picker-handle {
-      width: 40px; height: 5px;
-      background: #ddd; border-radius: 3px;
-      margin: 0 auto 18px;
+      width: 40px; height: 4px;
+      background: var(--border); border-radius: 2px; margin: 0 auto 18px;
     }
-
     .picker-title {
-      font-size: 19px;
-      font-weight: 800;
-      color: var(--text);
-      text-align: center;
-      margin-bottom: 4px;
+      font-size: 18px; font-weight: 900; color: var(--text);
+      text-align: center; margin-bottom: 4px;
     }
-    .picker-title span { color: #4c9af5; }
-
+    .picker-title span { color: var(--accent); }
     .picker-subtitle {
-      font-size: 13px;
-      color: var(--muted);
-      text-align: center;
-      margin-bottom: 22px;
+      font-size: 13px; color: var(--muted);
+      text-align: center; margin-bottom: 20px;
     }
-
     .picker-item {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 16px 14px;
+      display: flex; align-items: center; gap: 14px;
+      padding: 15px 14px;
       background: var(--bg2);
-      border-radius: 14px;
-      margin-bottom: 10px;
+      border-radius: 12px; margin-bottom: 10px;
       cursor: pointer;
-      border: 1.5px solid var(--border2);
-      transition: background 0.12s, border-color 0.12s;
+      border-left: 4px solid var(--accent);
+      transition: opacity 0.12s;
     }
-    .picker-item:active { opacity: 0.75; }
-
-    .picker-item-icon { font-size: 26px; width: 36px; text-align: center; flex-shrink: 0; }
-
+    .picker-item:active { opacity: 0.7; }
+    .picker-item-icon { font-size: 24px; width: 34px; text-align: center; flex-shrink: 0; }
     .picker-item-body { flex: 1; }
-    .picker-item-name { font-size: 16px; font-weight: 700; color: var(--text); }
+    .picker-item-name { font-size: 15px; font-weight: 700; color: var(--text); }
     .picker-item-sub  { font-size: 12px; color: var(--muted); margin-top: 2px; }
-
-    .picker-item-arrow { font-size: 22px; color: var(--muted2); font-weight: 700; }
-
+    .picker-item-arrow { font-size: 20px; color: var(--accent); font-weight: 900; }
     .picker-cancel {
-      display: block;
-      width: 100%;
-      margin-top: 14px;
-      padding: 16px;
-      background: var(--output-bg);
-      border: none;
-      border-radius: 14px;
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text2);
-      cursor: pointer;
+      display: block; width: 100%; margin-top: 12px; padding: 15px;
+      background: transparent; border: 2px solid var(--border);
+      border-radius: 12px; font-size: 15px; font-weight: 700;
+      color: var(--muted); cursor: pointer; font-family: inherit;
     }
 
-    /* ── Hidden ── */
+    /* Concrete sub-form inputs */
+    .con-sub-input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 14px;
+      font-size: 16px;
+      font-family: inherit;
+      color: var(--input-text);
+      background: var(--input-bg);
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .con-sub-input:focus { border-color: var(--accent); border-left: 3px solid var(--accent); }
+    .con-sub-input::placeholder { color: var(--placeholder); }
+
+    /* Wrap asphalt/sand/curb form-rows in a card look */
+    .calc-body .form-row { 
+      background: var(--surface);
+      border-radius: 10px;
+      margin: 0 14px 10px;
+      padding: 12px 14px;
+      box-shadow: var(--card-shadow);
+      border-bottom: none;
+      border-top: none;
+    }
+    .calc-body .form-row:first-child { border-top: none; }
+    .calc-body .row-gap { height: 8px; margin: 0; }
+
+    /* Output rows as amber cards */
+    .calc-body .form-row.output-row {
+      background: var(--output-bg);
+      border-left: 4px solid var(--accent);
+    }
+
+    /* ══════════════════════════════════════
+       HIDDEN
+    ══════════════════════════════════════ */
     .hidden { display: none !important; }
   </style>
 </head>
@@ -835,7 +832,7 @@
       <div class="sub-header-title" id="con-sub-title"></div>
     </div>
 
-    <div class="calc-body" style="background:#fff;">
+    <div class="calc-body" >
 
       <!-- SLAB / FOOTING / WALL shared (L × W × T) -->
       <div id="con-sub-lwt" class="hidden">
@@ -843,21 +840,21 @@
           <span class="lbl" id="con-lwt-d1-lbl">Length</span>
         </div>
         <div class="form-row">
-          <input type="number" id="con-lwt-length" placeholder="" inputmode="decimal" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:13px 14px;font-size:17px;" />
+          <input type="number" id="con-lwt-length" placeholder="" inputmode="decimal" class="con-sub-input" />
           <span style="padding:0 14px;font-size:15px;color:#888;" id="con-lwt-d1-unit">feet</span>
         </div>
         <div class="form-row" style="border-top:1px solid #eee;margin-top:18px;">
           <span class="lbl" id="con-lwt-d2-lbl">Height</span>
         </div>
         <div class="form-row">
-          <input type="number" id="con-lwt-height" placeholder="" inputmode="decimal" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:13px 14px;font-size:17px;" />
+          <input type="number" id="con-lwt-height" placeholder="" inputmode="decimal" class="con-sub-input" />
           <span style="padding:0 14px;font-size:15px;color:#888;" id="con-lwt-d2-unit">feet</span>
         </div>
         <div class="form-row" style="border-top:1px solid #eee;margin-top:18px;">
           <span class="lbl" id="con-lwt-d3-lbl">Thickness</span>
         </div>
         <div class="form-row">
-          <input type="number" id="con-lwt-thickness" placeholder="" inputmode="decimal" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:13px 14px;font-size:17px;" />
+          <input type="number" id="con-lwt-thickness" placeholder="" inputmode="decimal" class="con-sub-input" />
           <span style="padding:0 14px;font-size:15px;color:#888;" id="con-lwt-d3-unit">inches</span>
         </div>
       </div>
@@ -868,14 +865,14 @@
           <span class="lbl">Diameter</span>
         </div>
         <div class="form-row">
-          <input type="number" id="con-col2-dia" placeholder="" inputmode="decimal" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:13px 14px;font-size:17px;" />
+          <input type="number" id="con-col2-dia" placeholder="" inputmode="decimal" class="con-sub-input" />
           <span style="padding:0 14px;font-size:15px;color:#888;">feet</span>
         </div>
         <div class="form-row" style="border-top:1px solid #eee;margin-top:18px;">
           <span class="lbl">Height</span>
         </div>
         <div class="form-row">
-          <input type="number" id="con-col2-h" placeholder="" inputmode="decimal" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:13px 14px;font-size:17px;" />
+          <input type="number" id="con-col2-h" placeholder="" inputmode="decimal" class="con-sub-input" />
           <span style="padding:0 14px;font-size:15px;color:#888;">feet</span>
         </div>
       </div>
@@ -886,14 +883,14 @@
           <span class="lbl">Diameter</span>
         </div>
         <div class="form-row">
-          <input type="number" id="con-circ2-dia" placeholder="" inputmode="decimal" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:13px 14px;font-size:17px;" />
+          <input type="number" id="con-circ2-dia" placeholder="" inputmode="decimal" class="con-sub-input" />
           <span style="padding:0 14px;font-size:15px;color:#888;">feet</span>
         </div>
         <div class="form-row" style="border-top:1px solid #eee;margin-top:18px;">
           <span class="lbl">Thickness</span>
         </div>
         <div class="form-row">
-          <input type="number" id="con-circ2-depth" placeholder="" inputmode="decimal" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:13px 14px;font-size:17px;" />
+          <input type="number" id="con-circ2-depth" placeholder="" inputmode="decimal" class="con-sub-input" />
           <span style="padding:0 14px;font-size:15px;color:#888;">inches</span>
         </div>
       </div>
@@ -902,29 +899,29 @@
       <div id="con-sub-stairs" class="hidden">
         <div class="form-row" style="border-top:none;"><span class="lbl">Rise per step</span></div>
         <div class="form-row">
-          <input type="number" id="con-st-rise" placeholder="" inputmode="decimal" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:13px 14px;font-size:17px;" />
+          <input type="number" id="con-st-rise" placeholder="" inputmode="decimal" class="con-sub-input" />
           <span style="padding:0 14px;font-size:15px;color:#888;">inches</span>
         </div>
         <div class="form-row" style="border-top:1px solid #eee;margin-top:18px;"><span class="lbl">Run per step</span></div>
         <div class="form-row">
-          <input type="number" id="con-st-run" placeholder="" inputmode="decimal" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:13px 14px;font-size:17px;" />
+          <input type="number" id="con-st-run" placeholder="" inputmode="decimal" class="con-sub-input" />
           <span style="padding:0 14px;font-size:15px;color:#888;">inches</span>
         </div>
         <div class="form-row" style="border-top:1px solid #eee;margin-top:18px;"><span class="lbl">Width</span></div>
         <div class="form-row">
-          <input type="number" id="con-st-width" placeholder="" inputmode="decimal" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:13px 14px;font-size:17px;" />
+          <input type="number" id="con-st-width" placeholder="" inputmode="decimal" class="con-sub-input" />
           <span style="padding:0 14px;font-size:15px;color:#888;">feet</span>
         </div>
         <div class="form-row" style="border-top:1px solid #eee;margin-top:18px;"><span class="lbl">Number of steps</span></div>
         <div class="form-row">
-          <input type="number" id="con-st-steps" placeholder="" inputmode="decimal" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:13px 14px;font-size:17px;" />
+          <input type="number" id="con-st-steps" placeholder="" inputmode="decimal" class="con-sub-input" />
           <span style="padding:0 14px;font-size:15px;color:#888;"></span>
         </div>
       </div>
 
       <!-- Shared: mix + cost -->
       <div style="margin-top:22px;">
-        <div class="select-row" style="background:#fff;">
+        <div class="select-row" >
           <span class="lbl">Mix strength</span>
           <select id="con2-mix">
             <option value="3000">3000 PSI</option>
@@ -933,7 +930,7 @@
             <option value="5000">5000 PSI</option>
           </select>
         </div>
-        <div class="form-row" style="background:#fff;">
+        <div class="form-row" >
           <span class="lbl">Cost per yard</span>
           <input type="number" id="con2-cost" placeholder="optional" inputmode="decimal" />
         </div>
