@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Maman Calculators — Sign In</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f0f0f;
+      color: #fff;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── Logo area ── */
+    .auth-hero {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 60px 20px 32px;
+      gap: 14px;
+    }
+    .auth-logo {
+      width: 80px; height: 80px; border-radius: 20px;
+      object-fit: contain; background: #1c1c1e;
+      box-shadow: 0 8px 32px rgba(229,57,53,0.25);
+    }
+    .auth-title { font-size: 26px; font-weight: 900; letter-spacing: 0.5px; }
+    .auth-sub { font-size: 14px; color: #888; font-weight: 500; }
+
+    /* ── Card ── */
+    .auth-card {
+      background: #1c1c1e;
+      border-radius: 20px 20px 0 0;
+      flex: 1;
+      padding: 28px 20px 40px;
+    }
+
+    /* ── Tabs ── */
+    .auth-tabs {
+      display: flex; background: #111113;
+      border-radius: 12px; padding: 4px; gap: 4px;
+      margin-bottom: 28px;
+    }
+    .auth-tab {
+      flex: 1; padding: 11px;
+      border-radius: 8px; border: none;
+      font-size: 14px; font-weight: 800;
+      cursor: pointer; font-family: inherit;
+      background: transparent; color: #666;
+      transition: all 0.15s;
+    }
+    .auth-tab.active { background: #e53935; color: #fff; }
+
+    /* ── Screen ── */
+    .auth-screen { display: none; }
+    .auth-screen.active { display: block; }
+
+    /* ── Field ── */
+    .field { margin-bottom: 16px; }
+    .field-label {
+      font-size: 12px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: #888; margin-bottom: 6px;
+      display: block;
+    }
+    .field-input-wrap { position: relative; }
+    .field-input {
+      width: 100%;
+      background: #111113; border: 1.5px solid #2e2e33;
+      border-radius: 12px; padding: 14px 16px;
+      font-size: 16px; color: #fff; outline: none;
+      font-family: inherit; transition: border-color 0.15s;
+    }
+    .field-input:focus { border-color: #e53935; }
+    .field-input.has-eye { padding-right: 48px; }
+    .field-input::placeholder { color: #444; }
+    .eye-btn {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      font-size: 18px; color: #555; padding: 4px;
+      transition: color 0.15s;
+    }
+    .eye-btn:active { color: #aaa; }
+
+    /* ── Remember me ── */
+    .remember-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 24px; cursor: pointer;
+    }
+    .remember-check {
+      width: 20px; height: 20px;
+      background: #111113; border: 1.5px solid #2e2e33;
+      border-radius: 6px; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; transition: all 0.15s;
+    }
+    .remember-check.checked { background: #e53935; border-color: #e53935; }
+    .remember-check.checked::after { content: '✓'; font-size: 13px; font-weight: 900; color: #fff; }
+    .remember-lbl { font-size: 14px; font-weight: 600; color: #aaa; }
+
+    /* ── Main button ── */
+    .auth-btn {
+      width: 100%; padding: 16px;
+      background: #e53935; color: #fff;
+      border: none; border-radius: 14px;
+      font-size: 17px; font-weight: 800;
+      cursor: pointer; font-family: inherit;
+      transition: opacity 0.15s; margin-bottom: 20px;
+    }
+    .auth-btn:active { opacity: 0.8; }
+    .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Forgot password link ── */
+    .forgot-link {
+      display: block; text-align: center;
+      font-size: 14px; font-weight: 700; color: #888;
+      cursor: pointer; margin-bottom: 20px;
+      transition: color 0.15s;
+    }
+    .forgot-link:active { color: #e53935; }
+
+    /* ── Error / success message ── */
+    .auth-msg {
+      border-radius: 10px; padding: 12px 14px;
+      font-size: 13px; font-weight: 600; line-height: 1.5;
+      margin-bottom: 16px; display: none;
+    }
+    .auth-msg.error { background: #3a0808; color: #ff8a8a; border: 1px solid #6a1010; display: block; }
+    .auth-msg.success { background: #0a2a0a; color: #88ff88; border: 1px solid #1a5a1a; display: block; }
+
+    /* ── Password strength ── */
+    .pwd-strength { margin-top: 6px; display: none; }
+    .pwd-strength.show { display: block; }
+    .pwd-bar {
+      height: 4px; border-radius: 2px; transition: all 0.3s;
+      background: #333; margin-bottom: 4px;
+    }
+    .pwd-bar-fill { height: 100%; border-radius: 2px; transition: all 0.3s; }
+    .pwd-hint { font-size: 11px; color: #666; }
+
+    /* ── Reset password screen ── */
+    .back-to-login {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 14px; font-weight: 700; color: #e53935;
+      cursor: pointer; margin-bottom: 24px; background: none; border: none;
+      font-family: inherit; padding: 0;
+    }
+
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 20px 0; color: #444; font-size: 12px; font-weight: 600;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: #2e2e33;
+    }
+
+    /* Loading spinner */
+    .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div class="auth-hero">
+  <img class="auth-logo" src="maman-logo.jpg" alt="Maman" />
+  <div class="auth-title">Maman Calculators</div>
+  <div class="auth-sub">Sign in to access your calculators</div>
+</div>
+
+<div class="auth-card">
+
+  <!-- Tabs: Login / Sign Up -->
+  <div class="auth-tabs" id="auth-tabs">
+    <button class="auth-tab active" onclick="showScreen('login', this)">Sign In</button>
+    <button class="auth-tab" onclick="showScreen('signup', this)">Create Account</button>
+  </div>
+
+  <!-- Message -->
+  <div class="auth-msg" id="auth-msg"></div>
+
+  <!-- ── LOGIN SCREEN ── -->
+  <div class="auth-screen active" id="screen-login">
+    <div class="field">
+      <label class="field-label">Email</label>
+      <input class="field-input" type="email" id="login-email" placeholder="you@email.com" autocomplete="email" inputmode="email" />
+    </div>
+    <div class="field">
+      <label class="field-label">Password</label>
+      <div class="field-input-wrap">
+        <input class="field-input has-eye" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
+        <button class="eye-btn" onclick="toggleEye('login-password', this)">👁</button>
+      </div>
+    </div>
+
+    <div class="remember-row" onclick="toggleRemember()">
+      <div class="remember-check" id="remember-check"></div>
+      <span class="remember-lbl">Remember me</span>
+    </div>
+
+    <button class="auth-btn" id="login-btn" onclick="doLogin()">Sign In</button>
+
+    <span class="forgot-link" onclick="showScreen('reset')">Forgot password?</span>
+  </div>
+
+  <!-- ── SIGN UP SCREEN ── -->
+  <div class="auth-screen" id="screen-signup">
+    <div class="field">
+      <label class="field-label">Full Name</label>
+      <input class="field-input" type="text" id="signup-name" placeholder="Nir Maman" autocomplete="name" />
+    </div>
+    <div class="field">
+      <label class="field-label">Email</label>
+      <input class="field-input" type="email" id="signup-email" placeholder="you@email.com" autocomplete="email" inputmode="email" />
+    </div>
+    <div class="field">
+      <label class="field-label">Password</label>
+      <div class="field-input-wrap">
+        <input class="field-input has-eye" type="password" id="signup-password" placeholder="Min 6 characters" autocomplete="new-password" oninput="checkStrength(this.value)" />
+        <button class="eye-btn" onclick="toggleEye('signup-password', this)">👁</button>
+      </div>
+      <div class="pwd-strength" id="pwd-strength">
+        <div class="pwd-bar"><div class="pwd-bar-fill" id="pwd-bar-fill"></div></div>
+        <div class="pwd-hint" id="pwd-hint"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Confirm Password</label>
+      <div class="field-input-wrap">
+        <input class="field-input has-eye" type="password" id="signup-confirm" placeholder="Repeat password" autocomplete="new-password" />
+        <button class="eye-btn" onclick="toggleEye('signup-confirm', this)">👁</button>
+      </div>
+    </div>
+
+    <button class="auth-btn" id="signup-btn" onclick="doSignup()">Create Account</button>
+  </div>
+
+  <!-- ── RESET PASSWORD SCREEN ── -->
+  <div class="auth-screen" id="screen-reset">
+    <button class="back-to-login" onclick="showScreen('login')">← Back to Sign In</button>
+    <div class="field">
+      <label class="field-label">Your Email Address</label>
+      <input class="field-input" type="email" id="reset-email" placeholder="you@email.com" inputmode="email" />
+    </div>
+    <button class="auth-btn" id="reset-btn" onclick="doReset()">Send Reset Link</button>
+  </div>
+
+</div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAVB6-1UkPVSlhyij0FNulUfI1lfmnk_1c",
+    authDomain: "lagunarose-1884d.firebaseapp.com",
+    projectId: "lagunarose-1884d",
+    storageBucket: "lagunarose-1884d.firebasestorage.app",
+    messagingSenderId: "338467122819",
+    appId: "1:338467122819:web:5c888c409c7fac938c75b6"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // Expose auth to window for button handlers
+  window._auth = auth;
+  window._firebase = { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence };
+
+  // If already logged in → go straight to calculator
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      window.location.href = 'index.html';
+    }
+  });
+</script>
+
+<script>
+  let rememberMe = true;
+
+  function showScreen(name, tabEl) {
+    document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    clearMsg();
+
+    if (tabEl) {
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      tabEl.classList.add('active');
+    }
+    if (name === 'reset') {
+      document.getElementById('auth-tabs').style.display = 'none';
+    } else {
+      document.getElementById('auth-tabs').style.display = '';
+    }
+  }
+
+  function toggleRemember() {
+    rememberMe = !rememberMe;
+    document.getElementById('remember-check').classList.toggle('checked', rememberMe);
+  }
+  // Default: remember checked
+  document.getElementById('remember-check').classList.add('checked');
+
+  function toggleEye(inputId, btn) {
+    const inp = document.getElementById(inputId);
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    btn.textContent = show ? '🙈' : '👁';
+  }
+
+  function showMsg(text, type) {
+    const el = document.getElementById('auth-msg');
+    el.textContent = text;
+    el.className = 'auth-msg ' + type;
+  }
+  function clearMsg() {
+    const el = document.getElementById('auth-msg');
+    el.className = 'auth-msg';
+    el.textContent = '';
+  }
+
+  function setLoading(btnId, loading, label) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.innerHTML = loading ? '<span class="spinner"></span> ' + label : label;
+  }
+
+  function checkStrength(pwd) {
+    const bar = document.getElementById('pwd-bar-fill');
+    const hint = document.getElementById('pwd-hint');
+    const wrap = document.getElementById('pwd-strength');
+    if (!pwd) { wrap.classList.remove('show'); return; }
+    wrap.classList.add('show');
+    let score = 0;
+    if (pwd.length >= 6) score++;
+    if (pwd.length >= 10) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+    const levels = [
+      { pct:'20%', color:'#e53935', label:'Weak' },
+      { pct:'40%', color:'#e53935', label:'Weak' },
+      { pct:'60%', color:'#f59e0b', label:'Fair' },
+      { pct:'80%', color:'#4caf50', label:'Good' },
+      { pct:'100%',color:'#4caf50', label:'Strong ✓' },
+    ];
+    const l = levels[score - 1] || levels[0];
+    bar.style.width = l.pct;
+    bar.style.background = l.color;
+    hint.textContent = l.label;
+    hint.style.color = l.color;
+  }
+
+  // ── LOGIN ──
+  async function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const pwd   = document.getElementById('login-password').value;
+    if (!email || !pwd) return showMsg('Please enter your email and password.', 'error');
+    clearMsg();
+    setLoading('login-btn', true, 'Signing in…');
+    try {
+      const auth = window._auth;
+      const { setPersistence, browserLocalPersistence, browserSessionPersistence, signInWithEmailAndPassword } = window._firebase;
+      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+      await signInWithEmailAndPassword(auth, email, pwd);
+      window.location.href = 'index.html';
+    } catch (e) {
+      setLoading('login-btn', false, 'Sign In');
+      showMsg(friendlyError(e.code), 'error');
+    }
+  }
+
+  // ── SIGN UP ──
+  async function doSignup() {
+    const name    = document.getElementById('signup-name').value.trim();
+    const email   = document.getElementById('signup-email').value.trim();
+    const pwd     = document.getElementById('signup-password').value;
+    const confirm = document.getElementById('signup-confirm').value;
+    if (!name)              return showMsg('Please enter your name.', 'error');
+    if (!email)             return showMsg('Please enter your email.', 'error');
+    if (pwd.length < 6)     return showMsg('Password must be at least 6 characters.', 'error');
+    if (pwd !== confirm)    return showMsg('Passwords do not match.', 'error');
+    clearMsg();
+    setLoading('signup-btn', true, 'Creating account…');
+    try {
+      const { createUserWithEmailAndPassword, updateProfile } = window._firebase;
+      const cred = await createUserWithEmailAndPassword(window._auth, email, pwd);
+      await updateProfile(cred.user, { displayName: name });
+      window.location.href = 'index.html';
+    } catch (e) {
+      setLoading('signup-btn', false, 'Create Account');
+      showMsg(friendlyError(e.code), 'error');
+    }
+  }
+
+  // ── RESET ──
+  async function doReset() {
+    const email = document.getElementById('reset-email').value.trim();
+    if (!email) return showMsg('Please enter your email address.', 'error');
+    clearMsg();
+    setLoading('reset-btn', true, 'Sending…');
+    try {
+      await window._firebase.sendPasswordResetEmail(window._auth, email);
+      setLoading('reset-btn', false, 'Send Reset Link');
+      showMsg('✅ Reset email sent! Check your inbox (and spam folder).', 'success');
+    } catch (e) {
+      setLoading('reset-btn', false, 'Send Reset Link');
+      showMsg(friendlyError(e.code), 'error');
+    }
+  }
+
+  function friendlyError(code) {
+    const map = {
+      'auth/user-not-found':       'No account found with that email.',
+      'auth/wrong-password':       'Incorrect password. Try again.',
+      'auth/invalid-email':        'Please enter a valid email address.',
+      'auth/email-already-in-use': 'An account with this email already exists.',
+      'auth/weak-password':        'Password is too weak. Use at least 6 characters.',
+      'auth/too-many-requests':    'Too many attempts. Please wait a moment.',
+      'auth/network-request-failed': 'Network error. Check your connection.',
+      'auth/invalid-credential':   'Incorrect email or password.',
+    };
+    return map[code] || 'Something went wrong. Please try again.';
+  }
+
+  // Allow Enter key to submit
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const screen = document.querySelector('.auth-screen.active');
+    if (screen.id === 'screen-login')  doLogin();
+    if (screen.id === 'screen-signup') doSignup();
+    if (screen.id === 'screen-reset')  doReset();
+  });
+</script>
+</body>
+</html>
