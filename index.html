@@ -206,6 +206,44 @@
     .page { display: none; padding: 6px 16px 20px; }
     .page.active { display: block; }
 
+    /* ══════════════════ QUICK SF TOGGLE ══════════════════ */
+    .sf-toggle-row {
+      display: flex; align-items: center; gap: 0;
+      background: var(--card2); border-radius: 12px;
+      margin-bottom: 12px; padding: 4px; overflow: hidden;
+    }
+    .sf-toggle-btn {
+      flex: 1; padding: 10px 8px;
+      border: none; border-radius: 8px;
+      font-size: 12px; font-weight: 800; letter-spacing: 0.5px;
+      cursor: pointer; font-family: inherit; text-align: center;
+      background: transparent; color: var(--text3);
+      transition: all 0.15s; text-transform: uppercase;
+    }
+    .sf-toggle-btn.active { background: var(--accent); color: #fff; }
+
+    .quick-sf-row {
+      background: var(--card); border-radius: 16px;
+      padding: 16px; margin-bottom: 12px;
+      border: 2px solid var(--accent);
+    }
+    .quick-sf-label {
+      font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+    }
+    .quick-sf-input-wrap { display: flex; align-items: center; gap: 10px; }
+    .quick-sf-input {
+      flex: 1; background: var(--input-bg);
+      border: 1.5px solid var(--accent); border-radius: 12px;
+      padding: 14px 16px; font-size: 22px; font-weight: 800;
+      color: var(--text); outline: none; font-family: inherit;
+      transition: background 0.2s, color 0.2s;
+    }
+    .quick-sf-input::placeholder { color: var(--text3); font-size: 18px; font-weight: 400; }
+    .quick-sf-unit {
+      font-size: 14px; font-weight: 700; color: var(--text3); white-space: nowrap;
+    }
+
     /* ══════════════════ SECTION CARD ══════════════════ */
     .card {
       background: var(--card); border-radius: 16px;
@@ -535,12 +573,34 @@
 ════════════════════════════════════ -->
 <div class="page active" id="page-asphalt">
 
-  <div class="card">
+  <!-- Quick SF toggle -->
+  <div class="sf-toggle-row">
+    <button class="sf-toggle-btn active" onclick="aspMode('dims',this)">Width × Length</button>
+    <button class="sf-toggle-btn" onclick="aspMode('sf',this)">Quick SF</button>
+  </div>
+
+  <!-- Quick SF input -->
+  <div class="quick-sf-row hidden" id="asp-sf-row">
+    <div class="quick-sf-label">⚡ Enter Total Square Footage</div>
+    <div class="quick-sf-input-wrap">
+      <input class="quick-sf-input" type="number" id="asp-quick-sf" placeholder="e.g. 5000" inputmode="decimal" />
+      <span class="quick-sf-unit">ft²</span>
+    </div>
+  </div>
+
+  <div class="card" id="asp-dims-card">
     <div class="card-label">Inputs</div>
     <div class="irow"><span class="irow-lbl">Width</span><input type="number" id="asp-width" placeholder="feet" inputmode="decimal" /></div>
     <div class="irow"><span class="irow-lbl">Length</span><input type="number" id="asp-length" placeholder="feet" inputmode="decimal" /></div>
     <div class="irow"><span class="irow-lbl">Thickness</span><input type="number" id="asp-depth" placeholder="inches" inputmode="decimal" /></div>
     <div class="irow"><span class="irow-lbl">Cost per ton <span class="opt">optional</span></span><input type="number" id="asp-cost" placeholder="$" inputmode="decimal" /></div>
+  </div>
+
+  <!-- Thickness + cost for quick SF mode -->
+  <div class="card hidden" id="asp-sf-extra">
+    <div class="card-label">Additional Inputs</div>
+    <div class="irow" style="border-top:none;"><span class="irow-lbl">Thickness</span><input type="number" id="asp-sf-depth" placeholder="inches" inputmode="decimal" /></div>
+    <div class="irow"><span class="irow-lbl">Cost per ton <span class="opt">optional</span></span><input type="number" id="asp-sf-cost" placeholder="$" inputmode="decimal" /></div>
   </div>
 
   <div class="card">
@@ -596,7 +656,27 @@
     <button class="back-btn" onclick="closeConSub()">← Back</button>
 
     <div id="con-sub-lwt" class="hidden">
-      <div class="card">
+
+      <!-- Quick SF toggle (only for slab/wall/footing) -->
+      <div class="sf-toggle-row" id="con-sf-toggle">
+        <button class="sf-toggle-btn active" onclick="conMode('dims',this)">Width × Length</button>
+        <button class="sf-toggle-btn" onclick="conMode('sf',this)">Quick SF</button>
+      </div>
+
+      <!-- Quick SF input -->
+      <div class="quick-sf-row hidden" id="con-sf-row">
+        <div class="quick-sf-label">⚡ Enter Total Square Footage</div>
+        <div class="quick-sf-input-wrap">
+          <input class="quick-sf-input" type="number" id="con-quick-sf" placeholder="e.g. 5000" inputmode="decimal" />
+          <span class="quick-sf-unit">ft²</span>
+        </div>
+      </div>
+      <!-- SF thickness -->
+      <div class="card hidden" id="con-sf-extra">
+        <div class="irow" style="border-top:none;"><span class="irow-lbl" id="con-sf-depth-lbl">Thickness</span><input type="number" id="con-sf-depth" placeholder="inches" inputmode="decimal" /></div>
+      </div>
+
+      <div class="card" id="con-dims-card">
         <div class="card-label" id="con-sub-title">Concrete Slab</div>
         <div class="irow"><span class="irow-lbl" id="con-lwt-d1-lbl">Length</span><input type="number" id="con-lwt-length" placeholder="feet" inputmode="decimal" /></div>
         <div class="irow"><span class="irow-lbl" id="con-lwt-d2-lbl">Width</span><input type="number" id="con-lwt-height" placeholder="feet" inputmode="decimal" /></div>
@@ -671,7 +751,22 @@
 ════════════════════════════════════ -->
 <div class="page" id="page-sand">
 
-  <div class="card">
+  <!-- Quick SF toggle -->
+  <div class="sf-toggle-row">
+    <button class="sf-toggle-btn active" onclick="sndMode('dims',this)">Width × Length</button>
+    <button class="sf-toggle-btn" onclick="sndMode('sf',this)">Quick SF</button>
+  </div>
+
+  <!-- Quick SF input -->
+  <div class="quick-sf-row hidden" id="snd-sf-row">
+    <div class="quick-sf-label">⚡ Enter Total Square Footage</div>
+    <div class="quick-sf-input-wrap">
+      <input class="quick-sf-input" type="number" id="snd-quick-sf" placeholder="e.g. 5000" inputmode="decimal" />
+      <span class="quick-sf-unit">ft²</span>
+    </div>
+  </div>
+
+  <div class="card" id="snd-dims-card">
     <div class="card-label">Inputs</div>
     <div class="irow"><span class="irow-lbl">Width</span><input type="number" id="snd-width" placeholder="feet" inputmode="decimal" /></div>
     <div class="irow"><span class="irow-lbl">Length</span><input type="number" id="snd-length" placeholder="feet" inputmode="decimal" /></div>
@@ -695,6 +790,29 @@
     </div>
     <div class="irow hidden" id="snd-other-field"><span class="irow-lbl">Density (lb/ft³)</span><input type="number" id="snd-custom-density" placeholder="100" inputmode="decimal" /></div>
     <div class="irow"><span class="irow-lbl">Cost per ton <span class="opt">optional</span></span><input type="number" id="snd-cost" placeholder="$" inputmode="decimal" /></div>
+  </div>
+
+  <!-- SF extra: material + thickness + cost -->
+  <div class="card hidden" id="snd-sf-extra">
+    <div class="card-label">Additional Inputs</div>
+    <div class="irow" style="border-top:none;"><span class="irow-lbl">Material</span>
+      <select id="snd-sf-material">
+        <option value="100">Concrete Sand</option>
+        <option value="96">Masonry Sand</option>
+        <option value="105">#8 Gravel</option>
+        <option value="100">#67 Gravel</option>
+        <option value="98">2-inch Gravel</option>
+        <option value="100">#57 Bluestone</option>
+        <option value="100">#67 Bluestone</option>
+        <option value="98">#7 Bluestone</option>
+        <option value="96">#8 Bluestone</option>
+        <option value="110">CR6 Bluestone</option>
+        <option value="70">¾ Lightweight</option>
+        <option value="95">Stone Dust</option>
+      </select>
+    </div>
+    <div class="irow"><span class="irow-lbl">Thickness</span><input type="number" id="snd-sf-depth" placeholder="inches" inputmode="decimal" /></div>
+    <div class="irow"><span class="irow-lbl">Cost per ton <span class="opt">optional</span></span><input type="number" id="snd-sf-cost" placeholder="$" inputmode="decimal" /></div>
   </div>
 
   <div class="card">
@@ -916,17 +1034,55 @@
   function clr(id) { const el=document.getElementById(id); if(el) el.value=''; }
   function fmtSF(v) { return v.toLocaleString('en-US',{maximumFractionDigits:1})+' SF'; }
 
+  // ── MODE TOGGLES ──
+  let _aspMode = 'dims', _sndMode = 'dims', _conMode = 'dims';
+
+  function aspMode(mode, el) {
+    _aspMode = mode;
+    document.querySelectorAll('#page-asphalt .sf-toggle-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('asp-dims-card').classList.toggle('hidden', mode==='sf');
+    document.getElementById('asp-sf-row').classList.toggle('hidden', mode==='dims');
+    document.getElementById('asp-sf-extra').classList.toggle('hidden', mode==='dims');
+  }
+  function sndMode(mode, el) {
+    _sndMode = mode;
+    document.querySelectorAll('#page-sand .sf-toggle-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('snd-dims-card').classList.toggle('hidden', mode==='sf');
+    document.getElementById('snd-sf-row').classList.toggle('hidden', mode==='dims');
+    document.getElementById('snd-sf-extra').classList.toggle('hidden', mode==='dims');
+  }
+  function conMode(mode, el) {
+    _conMode = mode;
+    document.querySelectorAll('#con-sf-toggle .sf-toggle-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('con-dims-card').classList.toggle('hidden', mode==='sf');
+    document.getElementById('con-sf-row').classList.toggle('hidden', mode==='dims');
+    document.getElementById('con-sf-extra').classList.toggle('hidden', mode==='dims');
+  }
+
   // ── ASPHALT ──
   function calcAsphalt() {
-    const W=n('asp-width'), L=n('asp-length'), D=n('asp-depth');
-    if(!W||!L||!D) return alert('Please fill in Width, Length, and Thickness.');
-    const volFt=W*L*(D/12), volYd=volFt/27, tons=(volFt*145)/2000, cpt=n('asp-cost');
+    let sf, D;
+    if (_aspMode === 'sf') {
+      sf = n('asp-quick-sf');
+      D  = n('asp-sf-depth');
+      if (!sf || !D) return alert('Please enter Square Footage and Thickness.');
+    } else {
+      const W=n('asp-width'), L=n('asp-length');
+      D = n('asp-depth');
+      if(!W||!L||!D) return alert('Please fill in Width, Length, and Thickness.');
+      sf = W * L;
+    }
+    const cpt = _aspMode==='sf' ? n('asp-sf-cost') : n('asp-cost');
+    const volFt=sf*(D/12), volYd=volFt/27, tons=(volFt*145)/2000;
     setText('asp-r-yards', fmt(volYd));
     setText('asp-r-tons',  fmt(tons));
     setText('asp-r-cost',  cpt ? fmtMoney(tons*cpt) : '—');
   }
   function clearAsphalt() {
-    ['asp-width','asp-length','asp-depth','asp-cost'].forEach(clr);
+    ['asp-width','asp-length','asp-depth','asp-cost','asp-quick-sf','asp-sf-depth','asp-sf-cost'].forEach(clr);
     ['asp-r-yards','asp-r-tons','asp-r-cost'].forEach(id=>setText(id,'—'));
   }
   function _aspBody() {
@@ -965,6 +1121,17 @@
       document.getElementById('con-sub-stairs').classList.remove('hidden');
     }
     document.getElementById('con-sub-title').textContent=conSubTitles[type];
+    // show/hide Quick SF toggle only for area-based types
+    const hasSF=['slab','wall','footing'].includes(type);
+    document.getElementById('con-sf-toggle').classList.toggle('hidden', !hasSF);
+    // reset to dims mode
+    _conMode='dims';
+    if(hasSF){
+      document.getElementById('con-dims-card').classList.remove('hidden');
+      document.getElementById('con-sf-row').classList.add('hidden');
+      document.getElementById('con-sf-extra').classList.add('hidden');
+      document.querySelectorAll('#con-sf-toggle .sf-toggle-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+    }
     clearConcrete2();
     document.getElementById('con-menu-screen').classList.add('hidden');
     document.getElementById('con-sub-screen').classList.remove('hidden');
@@ -978,9 +1145,15 @@
   function calcConcrete2(){
     let volFt=0;
     if(['slab','wall','footing'].includes(conSubType)){
-      const L=n('con-lwt-length'),H=n('con-lwt-height'),T=n('con-lwt-thickness');
-      if(!L||!H||!T) return alert('Please fill in all fields.');
-      volFt=L*H*(T/12);
+      if (_conMode === 'sf') {
+        const sf=n('con-quick-sf'), T=n('con-sf-depth');
+        if(!sf||!T) return alert('Please enter Square Footage and Thickness.');
+        volFt=sf*(T/12);
+      } else {
+        const L=n('con-lwt-length'),H=n('con-lwt-height'),T=n('con-lwt-thickness');
+        if(!L||!H||!T) return alert('Please fill in all fields.');
+        volFt=L*H*(T/12);
+      }
     } else if(conSubType==='column'){
       const dia=n('con-col2-dia'),h=n('con-col2-h');
       if(!dia||!h) return alert('Please fill in all fields.');
@@ -1016,7 +1189,7 @@
     document.getElementById('con2-output').classList.add('show');
   }
   function clearConcrete2(){
-    ['con-lwt-length','con-lwt-height','con-lwt-thickness','con-col2-dia','con-col2-h','con-circ2-dia','con-circ2-depth','con-st-rise','con-st-run','con-st-width','con-st-steps','con2-cost'].forEach(clr);
+    ['con-lwt-length','con-lwt-height','con-lwt-thickness','con-col2-dia','con-col2-h','con-circ2-dia','con-circ2-depth','con-st-rise','con-st-run','con-st-width','con-st-steps','con2-cost','con-quick-sf','con-sf-depth'].forEach(clr);
     document.getElementById('con2-output').classList.remove('show');
   }
   function _conBody(){
@@ -1030,17 +1203,29 @@
   // ── SAND & GRAVEL ──
   function toggleSndOther(){ document.getElementById('snd-other-field').classList.toggle('hidden', document.getElementById('snd-material').value!=='0'); }
   function calcSand(){
-    const W=n('snd-width'),L=n('snd-length'),D=n('snd-depth');
-    if(!W||!L||!D) return alert('Please fill in all fields.');
-    let density=parseFloat(document.getElementById('snd-material').value);
-    if(density===0){density=n('snd-custom-density');if(!density) return alert('Enter a density.');}
-    const volFt=W*L*(D/12), tons=(volFt*density)/2000, yards=volFt/27, cpt=n('snd-cost');
+    let sf, D, density, cpt;
+    if (_sndMode === 'sf') {
+      sf      = n('snd-quick-sf');
+      D       = n('snd-sf-depth');
+      density = parseFloat(document.getElementById('snd-sf-material').value);
+      cpt     = n('snd-sf-cost');
+      if(!sf||!D) return alert('Please enter Square Footage and Thickness.');
+    } else {
+      const W=n('snd-width'),L=n('snd-length');
+      D=n('snd-depth');
+      if(!W||!L||!D) return alert('Please fill in all fields.');
+      sf=W*L;
+      density=parseFloat(document.getElementById('snd-material').value);
+      if(density===0){density=n('snd-custom-density');if(!density) return alert('Enter a density.');}
+      cpt=n('snd-cost');
+    }
+    const volFt=sf*(D/12), tons=(volFt*density)/2000, yards=volFt/27;
     setText('snd-r-tons', fmt(tons));
     setText('snd-r-yards', fmt(yards));
     setText('snd-r-cost', cpt?fmtMoney(tons*cpt):'—');
   }
   function clearSand(){
-    ['snd-width','snd-length','snd-depth','snd-cost','snd-custom-density'].forEach(clr);
+    ['snd-width','snd-length','snd-depth','snd-cost','snd-custom-density','snd-quick-sf','snd-sf-depth','snd-sf-cost'].forEach(clr);
     ['snd-r-tons','snd-r-yards','snd-r-cost'].forEach(id=>setText(id,'—'));
   }
   function _sndBody(){
