@@ -683,22 +683,70 @@
         <div class="irow"><span class="irow-lbl" id="con-lwt-d3-lbl">Thickness</span><input type="number" id="con-lwt-thickness" placeholder="inches" inputmode="decimal" /></div>
       </div>
     </div>
+    <!-- COLUMN -->
     <div id="con-sub-col" class="hidden">
-      <div class="card">
+      <div class="sf-toggle-row">
+        <button class="sf-toggle-btn active" onclick="conColMode('dims',this)">Diameter × Height</button>
+        <button class="sf-toggle-btn" onclick="conColMode('sf',this)">Quick SF</button>
+      </div>
+      <!-- Quick SF for column: SF of footprint + height -->
+      <div class="quick-sf-row hidden" id="con-col-sf-row">
+        <div class="quick-sf-label">⚡ Enter Footprint SF</div>
+        <div class="quick-sf-input-wrap">
+          <input class="quick-sf-input" type="number" id="con-col-quick-sf" placeholder="e.g. 200" inputmode="decimal" />
+          <span class="quick-sf-unit">ft²</span>
+        </div>
+      </div>
+      <div class="card hidden" id="con-col-sf-extra">
+        <div class="irow" style="border-top:none;"><span class="irow-lbl">Height (ft)</span><input type="number" id="con-col-sf-h" placeholder="feet" inputmode="decimal" /></div>
+      </div>
+      <div class="card" id="con-col-dims-card">
         <div class="card-label">Concrete Column</div>
         <div class="irow"><span class="irow-lbl">Diameter (ft)</span><input type="number" id="con-col2-dia" placeholder="feet" inputmode="decimal" /></div>
         <div class="irow"><span class="irow-lbl">Height (ft)</span><input type="number" id="con-col2-h" placeholder="feet" inputmode="decimal" /></div>
       </div>
     </div>
+
+    <!-- CIRCLE SLAB -->
     <div id="con-sub-circ" class="hidden">
-      <div class="card">
+      <div class="sf-toggle-row">
+        <button class="sf-toggle-btn active" onclick="conCircMode('dims',this)">Diameter × Thickness</button>
+        <button class="sf-toggle-btn" onclick="conCircMode('sf',this)">Quick SF</button>
+      </div>
+      <div class="quick-sf-row hidden" id="con-circ-sf-row">
+        <div class="quick-sf-label">⚡ Enter Total Square Footage</div>
+        <div class="quick-sf-input-wrap">
+          <input class="quick-sf-input" type="number" id="con-circ-quick-sf" placeholder="e.g. 500" inputmode="decimal" />
+          <span class="quick-sf-unit">ft²</span>
+        </div>
+      </div>
+      <div class="card hidden" id="con-circ-sf-extra">
+        <div class="irow" style="border-top:none;"><span class="irow-lbl">Thickness (in)</span><input type="number" id="con-circ-sf-depth" placeholder="inches" inputmode="decimal" /></div>
+      </div>
+      <div class="card" id="con-circ-dims-card">
         <div class="card-label">Circle Slab</div>
         <div class="irow"><span class="irow-lbl">Diameter (ft)</span><input type="number" id="con-circ2-dia" placeholder="feet" inputmode="decimal" /></div>
         <div class="irow"><span class="irow-lbl">Thickness (in)</span><input type="number" id="con-circ2-depth" placeholder="inches" inputmode="decimal" /></div>
       </div>
     </div>
+
+    <!-- STAIRS -->
     <div id="con-sub-stairs" class="hidden">
-      <div class="card">
+      <div class="sf-toggle-row">
+        <button class="sf-toggle-btn active" onclick="conStairMode('dims',this)">Full Dimensions</button>
+        <button class="sf-toggle-btn" onclick="conStairMode('sf',this)">Quick SF</button>
+      </div>
+      <div class="quick-sf-row hidden" id="con-stair-sf-row">
+        <div class="quick-sf-label">⚡ Enter Total Square Footage</div>
+        <div class="quick-sf-input-wrap">
+          <input class="quick-sf-input" type="number" id="con-stair-quick-sf" placeholder="e.g. 100" inputmode="decimal" />
+          <span class="quick-sf-unit">ft²</span>
+        </div>
+      </div>
+      <div class="card hidden" id="con-stair-sf-extra">
+        <div class="irow" style="border-top:none;"><span class="irow-lbl">Avg. depth (in)</span><input type="number" id="con-stair-sf-depth" placeholder="inches" inputmode="decimal" /></div>
+      </div>
+      <div class="card" id="con-stair-dims-card">
         <div class="card-label">Concrete Stairs</div>
         <div class="irow"><span class="irow-lbl">Rise per step (in)</span><input type="number" id="con-st-rise" placeholder="inches" inputmode="decimal" /></div>
         <div class="irow"><span class="irow-lbl">Run per step (in)</span><input type="number" id="con-st-run" placeholder="inches" inputmode="decimal" /></div>
@@ -1035,7 +1083,7 @@
   function fmtSF(v) { return v.toLocaleString('en-US',{maximumFractionDigits:1})+' SF'; }
 
   // ── MODE TOGGLES ──
-  let _aspMode = 'dims', _sndMode = 'dims', _conMode = 'dims';
+  let _aspMode = 'dims', _sndMode = 'dims', _conMode = 'dims', _conColMode = 'dims', _conCircMode = 'dims', _conStairMode = 'dims';
 
   function aspMode(mode, el) {
     _aspMode = mode;
@@ -1060,6 +1108,30 @@
     document.getElementById('con-dims-card').classList.toggle('hidden', mode==='sf');
     document.getElementById('con-sf-row').classList.toggle('hidden', mode==='dims');
     document.getElementById('con-sf-extra').classList.toggle('hidden', mode==='dims');
+  }
+  function conColMode(mode, el) {
+    _conColMode = mode;
+    document.querySelectorAll('#con-sub-col .sf-toggle-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('con-col-dims-card').classList.toggle('hidden', mode==='sf');
+    document.getElementById('con-col-sf-row').classList.toggle('hidden', mode==='dims');
+    document.getElementById('con-col-sf-extra').classList.toggle('hidden', mode==='dims');
+  }
+  function conCircMode(mode, el) {
+    _conCircMode = mode;
+    document.querySelectorAll('#con-sub-circ .sf-toggle-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('con-circ-dims-card').classList.toggle('hidden', mode==='sf');
+    document.getElementById('con-circ-sf-row').classList.toggle('hidden', mode==='dims');
+    document.getElementById('con-circ-sf-extra').classList.toggle('hidden', mode==='dims');
+  }
+  function conStairMode(mode, el) {
+    _conStairMode = mode;
+    document.querySelectorAll('#con-sub-stairs .sf-toggle-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('con-stair-dims-card').classList.toggle('hidden', mode==='sf');
+    document.getElementById('con-stair-sf-row').classList.toggle('hidden', mode==='dims');
+    document.getElementById('con-stair-sf-extra').classList.toggle('hidden', mode==='dims');
   }
 
   // ── ASPHALT ──
@@ -1124,8 +1196,8 @@
     // show/hide Quick SF toggle only for area-based types
     const hasSF=['slab','wall','footing'].includes(type);
     document.getElementById('con-sf-toggle').classList.toggle('hidden', !hasSF);
-    // reset to dims mode
-    _conMode='dims';
+    // reset all modes to dims
+    _conMode='dims'; _conColMode='dims'; _conCircMode='dims'; _conStairMode='dims';
     if(hasSF){
       document.getElementById('con-dims-card').classList.remove('hidden');
       document.getElementById('con-sf-row').classList.add('hidden');
@@ -1155,17 +1227,35 @@
         volFt=L*H*(T/12);
       }
     } else if(conSubType==='column'){
-      const dia=n('con-col2-dia'),h=n('con-col2-h');
-      if(!dia||!h) return alert('Please fill in all fields.');
-      volFt=Math.PI*Math.pow(dia/2,2)*h;
+      if(_conColMode==='sf'){
+        const sf=n('con-col-quick-sf'),h=n('con-col-sf-h');
+        if(!sf||!h) return alert('Please enter SF and Height.');
+        volFt=sf*h;
+      } else {
+        const dia=n('con-col2-dia'),h=n('con-col2-h');
+        if(!dia||!h) return alert('Please fill in all fields.');
+        volFt=Math.PI*Math.pow(dia/2,2)*h;
+      }
     } else if(conSubType==='circle'){
-      const dia=n('con-circ2-dia'),T=n('con-circ2-depth');
-      if(!dia||!T) return alert('Please fill in all fields.');
-      volFt=Math.PI*Math.pow(dia/2,2)*(T/12);
+      if(_conCircMode==='sf'){
+        const sf=n('con-circ-quick-sf'),T=n('con-circ-sf-depth');
+        if(!sf||!T) return alert('Please enter SF and Thickness.');
+        volFt=sf*(T/12);
+      } else {
+        const dia=n('con-circ2-dia'),T=n('con-circ2-depth');
+        if(!dia||!T) return alert('Please fill in all fields.');
+        volFt=Math.PI*Math.pow(dia/2,2)*(T/12);
+      }
     } else if(conSubType==='stairs'){
-      const rise=n('con-st-rise')/12,run=n('con-st-run')/12,w=n('con-st-width'),s=n('con-st-steps');
-      if(!rise||!run||!w||!s) return alert('Please fill in all fields.');
-      volFt=0.5*rise*run*w*s;
+      if(_conStairMode==='sf'){
+        const sf=n('con-stair-quick-sf'),T=n('con-stair-sf-depth');
+        if(!sf||!T) return alert('Please enter SF and Avg. Depth.');
+        volFt=sf*(T/12);
+      } else {
+        const rise=n('con-st-rise')/12,run=n('con-st-run')/12,w=n('con-st-width'),s=n('con-st-steps');
+        if(!rise||!run||!w||!s) return alert('Please fill in all fields.');
+        volFt=0.5*rise*run*w*s;
+      }
     }
     const volWaste=volFt*1.08, yards=volWaste/27, yardsUp=Math.ceil(yards*4)/4;
     const bags=Math.ceil(volWaste/0.45), psi=document.getElementById('con2-mix').value, cpy=n('con2-cost');
@@ -1189,7 +1279,14 @@
     document.getElementById('con2-output').classList.add('show');
   }
   function clearConcrete2(){
-    ['con-lwt-length','con-lwt-height','con-lwt-thickness','con-col2-dia','con-col2-h','con-circ2-dia','con-circ2-depth','con-st-rise','con-st-run','con-st-width','con-st-steps','con2-cost','con-quick-sf','con-sf-depth'].forEach(clr);
+    ['con-lwt-length','con-lwt-height','con-lwt-thickness',
+     'con-col2-dia','con-col2-h',
+     'con-circ2-dia','con-circ2-depth',
+     'con-st-rise','con-st-run','con-st-width','con-st-steps',
+     'con2-cost','con-quick-sf','con-sf-depth',
+     'con-col-quick-sf','con-col-sf-h',
+     'con-circ-quick-sf','con-circ-sf-depth',
+     'con-stair-quick-sf','con-stair-sf-depth'].forEach(clr);
     document.getElementById('con2-output').classList.remove('show');
   }
   function _conBody(){
