@@ -154,6 +154,20 @@
       content: ''; flex: 1; height: 1px; background: #2e2e33;
     }
 
+    /* Google button */
+    .google-btn {
+      width: 100%; padding: 15px;
+      background: #fff; color: #1a1a1a;
+      border: none; border-radius: 14px;
+      font-size: 16px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      margin-bottom: 4px; transition: opacity 0.15s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .google-btn:active { opacity: 0.85; }
+    .google-btn img { width: 20px; height: 20px; }
+
     /* Loading spinner */
     .spinner {
       display: inline-block; width: 18px; height: 18px;
@@ -204,8 +218,13 @@
     </div>
 
     <button class="auth-btn" id="login-btn" onclick="doLogin()">Sign In</button>
-
     <span class="forgot-link" onclick="showScreen('reset')">Forgot password?</span>
+
+    <div class="divider">or</div>
+    <button class="google-btn" onclick="doGoogle()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
+      Continue with Google
+    </button>
   </div>
 
   <!-- ── SIGN UP SCREEN ── -->
@@ -238,6 +257,12 @@
     </div>
 
     <button class="auth-btn" id="signup-btn" onclick="doSignup()">Create Account</button>
+
+    <div class="divider">or</div>
+    <button class="google-btn" onclick="doGoogle()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
+      Continue with Google
+    </button>
   </div>
 
   <!-- ── RESET PASSWORD SCREEN ── -->
@@ -255,7 +280,7 @@
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
   const firebaseConfig = {
     apiKey: "AIzaSyAVB6-1UkPVSlhyij0FNulUfI1lfmnk_1c",
@@ -271,7 +296,7 @@
 
   // Expose auth to window for button handlers
   window._auth = auth;
-  window._firebase = { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence };
+  window._firebase = { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence, GoogleAuthProvider, signInWithPopup };
 
   // If already logged in → go straight to calculator
   auth.onAuthStateChanged(user => {
@@ -355,6 +380,21 @@
     bar.style.background = l.color;
     hint.textContent = l.label;
     hint.style.color = l.color;
+  }
+
+  // ── GOOGLE SIGN IN ──
+  async function doGoogle() {
+    clearMsg();
+    try {
+      const { GoogleAuthProvider, signInWithPopup } = window._firebase;
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(window._auth, provider);
+      window.location.href = 'index.html';
+    } catch (e) {
+      if (e.code !== 'auth/popup-closed-by-user') {
+        showMsg(friendlyError(e.code), 'error');
+      }
+    }
   }
 
   // ── LOGIN ──
