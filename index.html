@@ -1618,7 +1618,24 @@
       const sf=document.getElementById('area-sf-'+id)?.textContent||'—';
       if(w&&h) lines+=nm+': '+w+' × '+h+' = '+sf+'\n';
     });
-    return 'Measurements Estimate\n\n'+lines+'\nTotal SF: '+document.getElementById('meas-total-sf').textContent+'\n+10% Waste: '+document.getElementById('meas-waste-sf').textContent+'\nEstimated Total: '+document.getElementById('meas-est-total').textContent;
+    const totalSF  = document.getElementById('meas-total-sf').textContent;
+    const wasteSF  = document.getElementById('meas-waste-sf').textContent;
+    const estTotal = document.getElementById('meas-est-total').textContent;
+    const price    = document.getElementById('meas-price').value;
+    const extra    = document.getElementById('meas-extra').value;
+
+    let msg = '📐 MEASUREMENTS ESTIMATE\n';
+    msg += '══════════════════════\n\n';
+    if(lines) msg += 'AREAS:\n' + lines + '\n';
+    msg += '══════════════════════\n';
+    msg += '✅ TOTAL SF: ' + totalSF + '\n';
+    msg += '📦 +10% Waste: ' + wasteSF + '\n';
+    if(price) msg += '💰 Price per SF: $' + price + '\n';
+    if(extra) msg += '➕ Extra cost: $' + extra + '\n';
+    msg += '💵 ESTIMATED TOTAL: ' + estTotal + '\n';
+    msg += '══════════════════════\n';
+    msg += 'Maman Calculators\nsurfaceestimator.com';
+    return msg;
   }
   function measEmail(){ window.location.href='mailto:?subject=Measurements%20Estimate&body='+encodeURIComponent(_measBody()); }
   function measText() { window.location.href='sms:?body='+encodeURIComponent(_measBody()); }
