@@ -579,10 +579,6 @@
       flex-direction: column; gap: 4px;
       cursor: pointer; user-select: none;
       font-size: 22px; color: #fff; font-weight: 800;
-      visibility: hidden;
-    }
-    .job-card-wrap:has(.job-card.swiped) .job-delete-reveal {
-      visibility: visible;
     }
     .job-card-wrap .job-delete-reveal span {
       font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
@@ -592,6 +588,7 @@
       border-radius: 16px;
       overflow: hidden; transition: transform 0.25s ease, border-radius 0.25s ease, background 0.2s;
       position: relative; z-index: 1;
+      width: 100%;
     }
     .job-card.swiped { transform: translateX(-90px); border-radius: 16px 0 0 16px; }
     .job-card-header {
@@ -2798,20 +2795,15 @@
     card.addEventListener('touchend', e => {
       const dx = e.changedTouches[0].clientX - startX;
       if (dx < -50) {
-        // swipe left — show delete
         card.classList.add('swiped'); isSwiped = true;
-        delReveal.style.visibility = 'visible';
       } else if (dx > 30) {
-        // swipe right — hide
         card.classList.remove('swiped'); isSwiped = false;
-        delReveal.style.visibility = 'hidden';
       }
     }, {passive:true});
     // Tap anywhere outside to close swipe
     document.addEventListener('touchstart', e => {
       if (isSwiped && !wrap.contains(e.target)) {
         card.classList.remove('swiped'); isSwiped = false;
-        delReveal.style.visibility = 'hidden';
       }
     }, {passive:true});
     card.innerHTML = `
