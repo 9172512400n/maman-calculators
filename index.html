@@ -589,10 +589,14 @@
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 16px;
-      overflow: hidden; transition: transform 0.25s ease, background 0.2s;
+      overflow: hidden; transition: transform 0.25s ease, border-radius 0.25s ease, background 0.2s;
       position: relative; z-index: 1;
     }
-    .job-card.swiped { transform: translateX(-90px); }
+    .job-card.swiped {
+      transform: translateX(-90px);
+      border-right: none;
+      border-radius: 16px 0 0 16px;
+    }
     .job-card-header {
       display: flex; align-items: flex-start;
       padding: 14px 16px; gap: 12px; cursor: pointer;
