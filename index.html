@@ -615,6 +615,7 @@
     .job-action-btn:active { opacity: 0.75; }
     .jab-load  { background: var(--card2); color: var(--text2); border: 1px solid var(--border); }
     .jab-call  { background: #1a4a1a; color: #4caf50; }
+    .jab-text  { background: #0a2a0a; color: #4caf50; }
     .jab-email { background: #08143a; color: #5b9bd5; }
     .jab-del   { background: #3a0808; color: #ff6b6b; }
 
@@ -2704,6 +2705,7 @@
         <div class="job-actions">
           ${job.areas?.length?`<button class="job-action-btn jab-load" onclick="loadJobToMeas('${job.id}')">📐 Load</button>`:''}
           ${job.phone?`<button class="job-action-btn jab-call" onclick="window.location.href='tel:${job.phone.replace(/\D/g,'')}'">📞 Call</button>`:''}
+          <button class="job-action-btn jab-text" onclick='textJobCard("${job.id}")'>📱 Text</button>
           <button class="job-action-btn jab-email" onclick='emailJobCard("${job.id}")'>📧 Email</button>
           <button class="job-action-btn" style="background:#1a4a8a;color:#5b9bd5;" onclick='openEditJob("${job.id}")'>✏️ Edit</button>
           <button class="job-action-btn jab-del" onclick="deleteJobCard('${job.id}')">🗑 Del</button>
@@ -2764,18 +2766,63 @@
   }
 
   function emailJobCard(id) {
-    const job = _allJobs.find(j=>j.id===id); if(!job) return;
-    const calcs = job.calcs||[];
-    let calcLines = calcs.map(c=>{
-      const src=(c.source||'Calculation').charAt(0).toUpperCase()+(c.source||'').slice(1);
-      const al=(c.areas||[]).map(a=>a.name+': '+a.w+'×'+a.h+'='+a.sf.toLocaleString()+' SF').join('\n')||(c.summary||'');
-      return src+(al?':\n'+al:'');
-    }).join('\n\n');
-    if (!calcLines && (job.areas?.length||job.summary)) {
-      calcLines = (job.areas||[]).map(a=>a.name+': '+a.w+'×'+a.h+'='+a.sf.toLocaleString()+' SF').join('\n')||(job.summary||'');
-    }
-    const body='📋 JOB SUMMARY\n══════════════════════\n📍 '+(job.address||job.name)+'\n'+(job.customer?'👤 '+job.customer+'\n':'')+(job.phone?'📞 '+job.phone+'\n':'')+(job.phone2?'📞 '+job.phone2+'\n':'')+(job.notes?'📝 '+job.notes+'\n':'')+'\n'+(calcLines?calcLines+'\n\n':'')+(job.totalSF?'Total SF: '+job.totalSF.toLocaleString()+' SF\n':'')+getSignature();
+    const job = (_allJobs.find(j=>j.id===id)) || (_panelJobs.find(j=>j.id===id));
+    if(!job) return;
+    const body = buildJobEmailBody(job);
     window.location.href='mailto:?subject=Job: '+encodeURIComponent(job.address||job.name)+'&body='+encodeURIComponent(body);
+  }
+
+  function textJobCard(id) {
+    const job = (_allJobs.find(j=>j.id===id)) || (_panelJobs.find(j=>j.id===id));
+    if(!job) return;
+    window.location.href='sms:?body='+encodeURIComponent(buildJobEmailBody(job));
+  }
+
+  function buildJobEmailBody(job) {
+    const calcs   = job.calcs || [];
+    const calcIcons = {asphalt:'🛣',concrete:'🏗',sand:'🪨',curb:'🚧',measurements:'📐'};
+
+    let calcSection = '';
+    if (calcs.length) {
+      calcSection = calcs.map((c, i) => {
+        const icon = calcIcons[c.source||'measurements'] || '📋';
+        const src  = (c.source||'calculation').charAt(0).toUpperCase() + (c.source||'').slice(1);
+        // areas list
+        const areaLines = (c.areas||[]).map(a =>
+          '  ' + a.name + ': ' + a.w + ' × ' + a.h + ' = ' + a.sf.toLocaleString('en-US',{maximumFractionDigits:0}) + ' SF'
+        ).join('\n');
+        // SF total for this calc
+        const sfLine = c.totalSF ? '  Total SF: ' + c.totalSF.toLocaleString('en-US',{maximumFractionDigits:0}) + ' SF' : '';
+        // summary (contains result values like yards/tons)
+        const summaryLine = c.summary ? c.summary.replace(/^📐.*\n/,'').replace(/══+\n?/g,'').trim() : '';
+        let lines = icon + ' ' + src + '\n';
+        if (areaLines) lines += areaLines + '\n';
+        if (sfLine)    lines += sfLine + '\n';
+        if (summaryLine && !areaLines) lines += summaryLine + '\n';
+        return lines.trim();
+      }).join('\n\n');
+    } else if (job.areas?.length || job.summary) {
+      // legacy
+      const areaLines = (job.areas||[]).map(a =>
+        '  ' + a.name + ': ' + a.w + ' × ' + a.h + ' = ' + a.sf.toLocaleString('en-US',{maximumFractionDigits:0}) + ' SF'
+      ).join('\n') || (job.summary||'');
+      calcSection = areaLines;
+    }
+
+    const totalSF = job.totalSF
+      ? '\n══════════════════════\n✅ TOTAL SF: ' + job.totalSF.toLocaleString('en-US',{maximumFractionDigits:0}) + ' SF'
+      : '';
+
+    return '📋 JOB SUMMARY\n══════════════════════\n' +
+      '📍 ' + (job.address||job.name) + '\n' +
+      (job.customer ? '👤 ' + job.customer + '\n' : '') +
+      (job.phone    ? '📞 ' + job.phone    + '\n' : '') +
+      (job.phone2   ? '📞 ' + job.phone2   + '\n' : '') +
+      (job.notes    ? '📝 ' + job.notes    + '\n' : '') +
+      '\n══════════════════════\n' +
+      (calcSection ? calcSection + '\n' : '') +
+      totalSF + '\n' +
+      getSignature();
   }
 
   // ── EDIT JOB ──
