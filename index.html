@@ -615,7 +615,9 @@
     .job-action-btn:active { opacity: 0.75; }
     .jab-load  { background: var(--card2); color: var(--text2); border: 1px solid var(--border); }
     .jab-call  { background: #1a4a1a; color: #4caf50; }
-    .jab-text  { background: #0a2a0a; color: #4caf50; }
+    .jab-share { background: #1a1a4a; color: #7b9fd5; }
+    .abtn-share { background: #1a1a4a; color: #7b9fd5; }
+    .meas-btn-share { background: #1a1a4a; color: #7b9fd5; }
     .jab-email { background: #08143a; color: #5b9bd5; }
     .jab-del   { background: #3a0808; color: #ff6b6b; }
 
@@ -1030,8 +1032,7 @@
   </div>
   <div class="btn-group">
     <button class="abtn abtn-clear" onclick="clearAsphalt()">Clear</button>
-    <button class="abtn abtn-text"  onclick="textAsphalt()">📱 Text</button>
-    <button class="abtn abtn-email" onclick="emailAsphalt()">📧 Email</button>
+    <button class="abtn abtn-share" onclick="shareCalc(_aspBody(),'Asphalt Estimate')">↗ Share</button>
   </div>
 
   <button class="save-job-tab-btn" onclick="openSaveJobFrom('asphalt')">💾 Save Job</button>
@@ -1228,8 +1229,7 @@
     </div>
     <div class="btn-group">
       <button class="abtn abtn-clear" onclick="clearConcrete2()">Clear</button>
-      <button class="abtn abtn-text"  onclick="textConcrete2()">📱 Text</button>
-      <button class="abtn abtn-email" onclick="emailConcrete2()">📧 Email</button>
+      <button class="abtn abtn-share" onclick="shareCalc(_conBody(),conSubTitles[conSubType]+' Estimate')">↗ Share</button>
     </div>
 
     <div class="con-output" id="con2-output">
@@ -1347,8 +1347,7 @@
   </div>
   <div class="btn-group">
     <button class="abtn abtn-clear" onclick="clearSand()">Clear</button>
-    <button class="abtn abtn-text"  onclick="textSand()">📱 Text</button>
-    <button class="abtn abtn-email" onclick="emailSand()">📧 Email</button>
+    <button class="abtn abtn-share" onclick="shareCalc(_sndBody(),'Sand & Gravel Estimate')">↗ Share</button>
   </div>
 
   <button class="save-job-tab-btn" onclick="openSaveJobFrom('sand')">💾 Save Job</button>
@@ -1411,8 +1410,7 @@
     <div class="btn-group"><button class="abtn abtn-calc" onclick="calcCurbQuick()">Calculate</button></div>
     <div class="btn-group">
       <button class="abtn abtn-clear" onclick="clearCurbQuick()">Clear</button>
-      <button class="abtn abtn-text"  onclick="textCurbQuick()">📱 Text</button>
-      <button class="abtn abtn-email" onclick="emailCurbQuick()">📧 Email</button>
+      <button class="abtn abtn-share" onclick="shareCalc(_curbQuickBody(),'Curb & Gutter Estimate')">↗ Share</button>
     </div>
     <div class="note"><strong>NOTE:</strong> Default dimensions are standard curb & gutter. Adjust if needed.</div>
   </div>
@@ -1484,8 +1482,7 @@
   </div>
   <div class="btn-group">
     <button class="abtn abtn-clear" onclick="clearCurb()">Clear</button>
-    <button class="abtn abtn-text"  onclick="textCurb()">📱 Text</button>
-    <button class="abtn abtn-email" onclick="emailCurb()">📧 Email</button>
+    <button class="abtn abtn-share" onclick="shareCalc(_curbBody(),'Curb & Gutter Estimate')">↗ Share</button>
   </div>
 
   <button class="save-job-tab-btn" onclick="openSaveJobFrom('curb')">💾 Save Job</button>
@@ -1530,8 +1527,7 @@
 
   <div class="btn-group">
     <button class="abtn abtn-clear" onclick="measClear()">Clear</button>
-    <button class="abtn abtn-text"  onclick="measText()">📱 Text</button>
-    <button class="abtn abtn-email" onclick="measEmail()">📧 Email</button>
+    <button class="abtn abtn-share" onclick="shareCalc(_measBody(),'Measurements Estimate')">↗ Share</button>
   </div>
 </div>
 
@@ -1809,7 +1805,38 @@
     return '';
   }
 
-  // ── Share ──
+  // ── Share calculation ──
+  async function shareCalc(body, title) {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: title || 'Maman Calculators', text: body });
+        return;
+      } catch(e) { if (e.name === 'AbortError') return; }
+    }
+    // Fallback: copy to clipboard
+    try {
+      await navigator.clipboard.writeText(body);
+      showToast('Copied to clipboard! 📋');
+    } catch(e) {
+      // Last fallback: email
+      window.location.href = 'mailto:?subject=' + encodeURIComponent(title||'Estimate') + '&body=' + encodeURIComponent(body);
+    }
+  }
+
+  function shareJob(id) {
+    const job = (_allJobs.find(j=>j.id===id)) || (_panelJobs.find(j=>j.id===id));
+    if (!job) return;
+    shareCalc(buildJobEmailBody(job), 'Job: ' + (job.address||job.name));
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('share-toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  // ── Share app ──
   function shareApp() {
     const url = 'https://maman-calculators.vercel.app';
     const title = 'Maman Calculators';
@@ -2709,8 +2736,7 @@
         <div class="job-actions">
           ${job.areas?.length?`<button class="job-action-btn jab-load" onclick="loadJobToMeas('${job.id}')">📐 Load</button>`:''}
           ${job.phone?`<button class="job-action-btn jab-call" onclick="window.location.href='tel:${job.phone.replace(/\D/g,'')}'">📞 Call</button>`:''}
-          <button class="job-action-btn jab-text" onclick='textJobCard("${job.id}")'>📱 Text</button>
-          <button class="job-action-btn jab-email" onclick='emailJobCard("${job.id}")'>📧 Email</button>
+          <button class="job-action-btn jab-share" onclick='shareJob("${job.id}")'>↗ Share</button>
           <button class="job-action-btn" style="background:#1a4a8a;color:#5b9bd5;" onclick='openEditJob("${job.id}")'>✏️ Edit</button>
           <button class="job-action-btn jab-del" onclick="deleteJobCard('${job.id}')">🗑 Del</button>
         </div>
