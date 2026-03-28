@@ -43,10 +43,12 @@
         const name = user.displayName || user.email.split('@')[0];
         const el = document.getElementById('user-name');
         if (el) el.textContent = name;
-        // Show app once auth confirmed
         document.body.style.opacity = '1';
       }
     });
+
+    // Fallback: if Firebase is slow, show page after 3s anyway
+    setTimeout(() => { document.body.style.opacity = '1'; }, 3000);
 
     // Save project to Firestore
     window._saveProject = async (data) => {
