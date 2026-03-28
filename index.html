@@ -15,7 +15,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     const app = initializeApp({
       apiKey: "AIzaSyB_w82VhilliRBcfge2dM7e3VGcQhdon78",
@@ -60,6 +60,11 @@
     // Delete project
     window._deleteProject = async (id) => {
       await deleteDoc(doc(db, 'users', window._uid, 'projects', id));
+    };
+
+    // Update project note
+    window._updateProjectNote = async (id, notes) => {
+      await updateDoc(doc(db, 'users', window._uid, 'projects', id), { notes });
     };
   </script>
   <title>Maman Calculators</title>
@@ -558,6 +563,42 @@
       transition: opacity 0.15s;
     }
     .proj-save-btn-full:active { opacity: 0.8; }
+
+    /* Address autocomplete */
+    .addr-suggestions {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 999;
+      background: var(--card); border: 1.5px solid var(--accent);
+      border-top: none; border-radius: 0 0 12px 12px;
+      overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    .addr-suggestions.hidden { display: none; }
+    .addr-suggestion {
+      padding: 12px 14px; font-size: 14px; font-weight: 600;
+      color: var(--text); cursor: pointer;
+      border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;
+    }
+    .addr-suggestion:last-child { border: none; }
+    .addr-suggestion:active { background: var(--card2); }
+    .addr-suggestion .addr-icon { font-size: 16px; flex-shrink: 0; }
+    .addr-suggestion .addr-main { font-weight: 700; }
+    .addr-suggestion .addr-secondary { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+    /* Note editor on job card */
+    .job-note-editor {
+      background: var(--input-bg); border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 10px 12px; width: 100%;
+      font-size: 13px; color: var(--input-text); font-family: inherit;
+      resize: none; min-height: 70px; outline: none; margin-top: 6px;
+      transition: border-color 0.2s;
+    }
+    .job-note-editor:focus { border-color: var(--accent); }
+    .note-save-btn {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 8px; padding: 8px 16px; font-size: 13px;
+      font-weight: 700; cursor: pointer; font-family: inherit;
+      margin-top: 6px; transition: opacity 0.15s;
+    }
+    .note-save-btn:active { opacity: 0.8; }
 
     /* Save job sheet fields */
     .save-job-field { margin-bottom: 14px; }
@@ -1436,7 +1477,10 @@
 
     <div class="save-job-field">
       <div class="save-job-label">📍 Job Address</div>
-      <input class="save-job-input" type="text" id="sj-address" placeholder="123 Main St, Brooklyn NY" autocomplete="street-address" />
+      <div style="position:relative;">
+        <input class="save-job-input" type="text" id="sj-address" placeholder="Start typing address…" autocomplete="off" oninput="searchAddress(this.value)" />
+        <div class="addr-suggestions hidden" id="addr-suggestions"></div>
+      </div>
     </div>
     <div class="save-job-field">
       <div class="save-job-label">👤 Customer Name</div>
@@ -2085,6 +2129,44 @@
     window.scrollTo(0,0);
   }
 
+  // ── ADDRESS SEARCH (OpenStreetMap Nominatim — free, no key) ──
+  let _addrTimer = null;
+  async function searchAddress(q) {
+    const box = document.getElementById('addr-suggestions');
+    if (q.length < 3) { box.classList.add('hidden'); return; }
+    clearTimeout(_addrTimer);
+    _addrTimer = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=5&countrycodes=us`);
+        const data = await res.json();
+        box.innerHTML = '';
+        if (!data.length) { box.classList.add('hidden'); return; }
+        data.forEach(item => {
+          const main = item.address?.house_number
+            ? (item.address.house_number + ' ' + (item.address.road||''))
+            : (item.address?.road || item.display_name.split(',')[0]);
+          const secondary = [item.address?.city||item.address?.town||item.address?.village, item.address?.state, item.address?.postcode].filter(Boolean).join(', ');
+          const div = document.createElement('div');
+          div.className = 'addr-suggestion';
+          div.innerHTML = `<span class="addr-icon">📍</span><div><div class="addr-main">${main}</div><div class="addr-secondary">${secondary}</div></div>`;
+          div.onclick = () => {
+            const full = [main, secondary].filter(Boolean).join(', ');
+            document.getElementById('sj-address').value = full;
+            box.classList.add('hidden');
+          };
+          box.appendChild(div);
+        });
+        box.classList.remove('hidden');
+      } catch(e) { box.classList.add('hidden'); }
+    }, 400);
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#sj-address') && !e.target.closest('#addr-suggestions')) {
+      const box = document.getElementById('addr-suggestions');
+      if (box) box.classList.add('hidden');
+    }
+  });
+
   // ── SAVE JOB FROM ANY CALCULATOR ──
   let _saveJobSource = 'measurements';
 
@@ -2263,8 +2345,12 @@
         ${job.phone   ?`<div class="job-detail-row"><span class="jk">Phone</span><span class="jv">${job.phone}</span></div>`:''}
         ${sfText      ?`<div class="job-detail-row"><span class="jk">Total SF</span><span class="jv">${sfText}</span></div>`:''}
         ${job.price   ?`<div class="job-detail-row"><span class="jk">Price/SF</span><span class="jv">$${job.price}</span></div>`:''}
-        ${job.notes   ?`<div class="job-detail-row"><span class="jk">Notes</span><span class="jv">${job.notes}</span></div>`:''}
         ${areaLines   ?`<div class="job-areas-list">${areaLines.replace(/\n/g,'<br>')}</div>`:''}
+        <div style="margin:8px 0 4px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:4px;">📝 Notes</div>
+          <textarea class="job-note-editor" id="jnote-${job.id}" placeholder="Add or edit notes…">${job.notes||''}</textarea>
+          <button class="note-save-btn" onclick="saveJobNote('${job.id}')">Save Note</button>
+        </div>
         <div class="job-actions">
           ${job.areas?.length?`<button class="job-action-btn jab-load" onclick="loadJobToMeas('${job.id}')">📐 Load</button>`:''}
           ${job.phone?`<button class="job-action-btn jab-call" onclick="window.location.href='tel:${job.phone.replace(/\D/g,'')}'">📞 Call</button>`:''}
@@ -2276,6 +2362,23 @@
   }
 
   function toggleJobCard(id) { document.getElementById('jdetails-'+id).classList.toggle('open'); }
+
+  async function saveJobNote(id) {
+    const notes = document.getElementById('jnote-'+id).value.trim();
+    const btn = event.target;
+    btn.textContent = '⏳'; btn.disabled = true;
+    try {
+      await window._updateProjectNote(id, notes);
+      // update local cache
+      const job = _allJobs.find(j=>j.id===id);
+      if (job) job.notes = notes;
+      btn.textContent = '✅ Saved';
+      setTimeout(() => { btn.textContent = 'Save Note'; btn.disabled = false; }, 1500);
+    } catch(e) {
+      btn.textContent = 'Save Note'; btn.disabled = false;
+      alert('Error saving note.');
+    }
+  }
 
   async function deleteJobCard(id) {
     if (!confirm('Delete this job?')) return;
