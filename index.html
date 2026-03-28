@@ -1537,6 +1537,10 @@
       <input class="save-job-input" type="tel" id="ej-phone" placeholder="(917) 000-0000" inputmode="tel" />
     </div>
     <div class="save-job-field">
+      <div class="save-job-label">📞 Phone Number 2 <span style="font-weight:400;color:var(--text3);font-size:11px;">(optional)</span></div>
+      <input class="save-job-input" type="tel" id="ej-phone2" placeholder="(917) 000-0000" inputmode="tel" />
+    </div>
+    <div class="save-job-field">
       <div class="save-job-label">📝 Notes</div>
       <textarea class="save-job-input save-job-textarea" id="ej-notes" placeholder="Notes…"></textarea>
     </div>
@@ -1578,6 +1582,10 @@
       <div class="save-job-field">
         <div class="save-job-label">📞 Phone Number</div>
         <input class="save-job-input" type="tel" id="sj-phone" placeholder="(917) 000-0000" autocomplete="tel" inputmode="tel" />
+      </div>
+      <div class="save-job-field">
+        <div class="save-job-label">📞 Phone Number 2 <span style="font-weight:400;color:var(--text3);font-size:11px;">(optional)</span></div>
+        <input class="save-job-input" type="tel" id="sj-phone2" placeholder="(917) 000-0000" inputmode="tel" />
       </div>
       <div class="save-job-field">
         <div class="save-job-label">📝 Notes</div>
@@ -2405,11 +2413,12 @@
         const address  = document.getElementById('sj-address').value.trim();
         const customer = document.getElementById('sj-customer').value.trim();
         const phone    = document.getElementById('sj-phone').value.trim();
+    const phone2   = document.getElementById('sj-phone2').value.trim();
         const notes    = document.getElementById('sj-notes').value.trim();
         if (!address) { btn.textContent='💾 Save Job'; btn.disabled=false; return alert('Please enter a job address.'); }
         // Save as new job with calcs array
         await window._saveProject({
-          name: address, address, customer, phone, notes,
+          name: address, address, customer, phone, phone2, notes,
           source: _saveJobSource,
           calcs: [calc],
           totalSF: calc.totalSF||0,
@@ -2423,7 +2432,7 @@
       setTimeout(() => {
         btn.textContent = '💾 Save Job'; btn.disabled = false;
         closeSaveJob();
-        ['sj-address','sj-customer','sj-phone','sj-notes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+        ['sj-address','sj-customer','sj-phone','sj-phone2','sj-notes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
       }, 1500);
     } catch(e) {
       btn.textContent = '💾 Save Job'; btn.disabled = false;
@@ -2517,7 +2526,7 @@
         <div class="job-card-icon">📍</div>
         <div class="job-card-body">
           <div class="job-card-address">${job.address||job.name||'Unnamed Job'}</div>
-          <div class="job-card-customer">${job.customer?'👤 '+job.customer:''}${job.phone?' · 📞 '+job.phone:''}</div>
+          <div class="job-card-customer">${job.customer?'👤 '+job.customer:''}${job.phone?' · 📞 '+job.phone:''}${job.phone2?' · 📞 '+job.phone2:''}</div>
         </div>
         <div>
           <div class="job-card-sf">${sfText}</div>
@@ -2595,7 +2604,7 @@
     if (!calcLines && (job.areas?.length||job.summary)) {
       calcLines = (job.areas||[]).map(a=>a.name+': '+a.w+'×'+a.h+'='+a.sf.toLocaleString()+' SF').join('\n')||(job.summary||'');
     }
-    const body='📋 JOB SUMMARY\n══════════════════════\n📍 '+(job.address||job.name)+'\n'+(job.customer?'👤 '+job.customer+'\n':'')+(job.phone?'📞 '+job.phone+'\n':'')+(job.notes?'📝 '+job.notes+'\n':'')+'\n'+(calcLines?calcLines+'\n\n':'')+(job.totalSF?'Total SF: '+job.totalSF.toLocaleString()+' SF\n':'')+getSignature();
+    const body='📋 JOB SUMMARY\n══════════════════════\n📍 '+(job.address||job.name)+'\n'+(job.customer?'👤 '+job.customer+'\n':'')+(job.phone?'📞 '+job.phone+'\n':'')+(job.phone2?'📞 '+job.phone2+'\n':'')+(job.notes?'📝 '+job.notes+'\n':'')+'\n'+(calcLines?calcLines+'\n\n':'')+(job.totalSF?'Total SF: '+job.totalSF.toLocaleString()+' SF\n':'')+getSignature();
     window.location.href='mailto:?subject=Job: '+encodeURIComponent(job.address||job.name)+'&body='+encodeURIComponent(body);
   }
 
@@ -2606,6 +2615,7 @@
     document.getElementById('ej-address').value  = job.address||job.name||'';
     document.getElementById('ej-customer').value = job.customer||'';
     document.getElementById('ej-phone').value    = job.phone||'';
+    document.getElementById('ej-phone2').value   = job.phone2||'';
     document.getElementById('ej-notes').value    = job.notes||'';
     // render calcs list
     const calcs = job.calcs||[];
@@ -2643,6 +2653,7 @@
     const address  = document.getElementById('ej-address').value.trim();
     const customer = document.getElementById('ej-customer').value.trim();
     const phone    = document.getElementById('ej-phone').value.trim();
+    const phone2   = document.getElementById('ej-phone2').value.trim();
     const notes    = document.getElementById('ej-notes').value.trim();
     if (!address) return alert('Address is required.');
     const job   = _allJobs.find(j=>j.id===id); if(!job) return;
@@ -2651,8 +2662,8 @@
     const btn   = document.getElementById('ej-save-btn');
     btn.textContent='⏳ Saving...'; btn.disabled=true;
     try {
-      await window._updateJob(id, { name:address, address, customer, phone, notes, calcs, totalSF:newSF });
-      Object.assign(job, {name:address,address,customer,phone,notes,calcs,totalSF:newSF});
+      await window._updateJob(id, { name:address, address, customer, phone, phone2, notes, calcs, totalSF:newSF });
+      Object.assign(job, {name:address,address,customer,phone,phone2,notes,calcs,totalSF:newSF});
       btn.textContent='✅ Saved!';
       setTimeout(()=>{ btn.textContent='✅ Save Changes'; btn.disabled=false; closeEditJob(); loadJobsPage(); },1200);
     } catch(e) { btn.textContent='✅ Save Changes'; btn.disabled=false; alert('Error saving.'); }
