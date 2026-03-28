@@ -69,17 +69,20 @@
 
     // Add calculation to existing job
     window._addCalcToJob = async (jobId, calc) => {
+      if (!window._uid) throw new Error('Not logged in');
       const ref  = doc(db, 'users', window._uid, 'projects', jobId);
       const snap = await getDoc(ref);
-      const job  = snap.data() || {};
-      const calcs = job.calcs || [];
+      if (!snap.exists()) throw new Error('Job not found');
+      const job   = snap.data();
+      const calcs = Array.isArray(job.calcs) ? [...job.calcs] : [];
       calcs.push({ ...calc, savedAt: new Date().toISOString() });
-      const newTotalSF = calcs.reduce((s,c) => s + (c.totalSF||0), 0);
+      const newTotalSF = calcs.reduce((s,c) => s + (Number(c.totalSF)||0), 0);
       await updateDoc(ref, { calcs, totalSF: newTotalSF });
     };
 
     // Update full job
     window._updateJob = async (jobId, data) => {
+      if (!window._uid) throw new Error('Not logged in');
       const ref = doc(db, 'users', window._uid, 'projects', jobId);
       await updateDoc(ref, data);
     };
@@ -2379,44 +2382,67 @@
 
   async function confirmSaveJob() {
     const btn = document.getElementById('sj-save-btn');
-    btn.textContent = '⏳ Saving...'; btn.disabled = true;
 
-    // Build calculation object from current calculator
-    const calc = {
-      source:  _saveJobSource,
-      summary: document.getElementById('sj-summary').textContent,
-      savedAt: new Date().toISOString()
-    };
-
-    // Add areas if from measurements
-    if (_saveJobSource === 'measurements') {
-      const areas = []; let total = 0;
-      document.querySelectorAll('.area-row').forEach(row => {
-        const id = row.id.replace('area-row-', '');
-        const nm = row.querySelector('.area-name-input').value || ('Area '+id);
-        const w  = parseFloat(document.getElementById('area-w-'+id)?.value)||0;
-        const h  = parseFloat(document.getElementById('area-h-'+id)?.value)||0;
-        if (w&&h) { areas.push({name:nm,w,h,sf:w*h}); total+=w*h; }
-      });
-      calc.areas   = areas;
-      calc.totalSF = total;
-      calc.price   = document.getElementById('meas-price').value||'';
+    // Guard: must be logged in
+    if (!window._uid) {
+      alert('You must be logged in to save. Please refresh and sign in.');
+      return;
     }
 
+    const resetBtn = () => { btn.textContent = '💾 Save Job'; btn.disabled = false; };
+    btn.textContent = '⏳ Saving...'; btn.disabled = true;
+
+    // Set a safety timeout — never stay stuck
+    const safetyTimer = setTimeout(() => {
+      resetBtn();
+      alert('Save timed out. Please check your connection and try again.');
+    }, 12000);
+
     try {
-      if (_sjMode === 'existing') {
-        // Add to existing job
-        if (!_sjSelectedJobId) { btn.textContent='💾 Save Job'; btn.disabled=false; return alert('Please select a job first.'); }
-        await window._addCalcToJob(_sjSelectedJobId, calc);
+      // Build calculation object
+      const calc = {
+        source:  _saveJobSource || 'unknown',
+        summary: document.getElementById('sj-summary').textContent || '',
+        savedAt: new Date().toISOString()
+      };
+
+      // Add areas/SF based on source
+      if (_saveJobSource === 'measurements') {
+        const areas = []; let total = 0;
+        document.querySelectorAll('.area-row').forEach(row => {
+          const id = row.id.replace('area-row-','');
+          const nm = row.querySelector('.area-name-input')?.value || ('Area '+id);
+          const w  = parseFloat(document.getElementById('area-w-'+id)?.value)||0;
+          const h  = parseFloat(document.getElementById('area-h-'+id)?.value)||0;
+          if (w&&h) { areas.push({name:nm,w,h,sf:w*h}); total+=w*h; }
+        });
+        calc.areas   = areas;
+        calc.totalSF = total;
+        calc.price   = document.getElementById('meas-price')?.value||'';
       } else {
-        // New job
+        // For other calculators extract SF from summary text
+        const sumText = calc.summary;
+        const sfMatch = sumText.match(/(\d[\d,]*)\s*ft²/);
+        if (sfMatch) calc.totalSF = parseFloat(sfMatch[1].replace(/,/g,''))||0;
+      }
+
+      if (_sjMode === 'existing') {
+        if (!_sjSelectedJobId) {
+          clearTimeout(safetyTimer); resetBtn();
+          return alert('Please select a job from the list first.');
+        }
+        await window._addCalcToJob(_sjSelectedJobId, calc);
+
+      } else {
         const address  = document.getElementById('sj-address').value.trim();
         const customer = document.getElementById('sj-customer').value.trim();
         const phone    = document.getElementById('sj-phone').value.trim();
-    const phone2   = document.getElementById('sj-phone2').value.trim();
+        const phone2   = document.getElementById('sj-phone2').value.trim();
         const notes    = document.getElementById('sj-notes').value.trim();
-        if (!address) { btn.textContent='💾 Save Job'; btn.disabled=false; return alert('Please enter a job address.'); }
-        // Save as new job with calcs array
+        if (!address) {
+          clearTimeout(safetyTimer); resetBtn();
+          return alert('Please enter a job address.');
+        }
         await window._saveProject({
           name: address, address, customer, phone, phone2, notes,
           source: _saveJobSource,
@@ -2424,19 +2450,25 @@
           totalSF: calc.totalSF||0,
           areas: calc.areas||[],
           price: calc.price||'',
-          summary: calc.summary
+          summary: calc.summary||''
         });
       }
 
+      clearTimeout(safetyTimer);
       btn.textContent = '✅ Saved!';
       setTimeout(() => {
-        btn.textContent = '💾 Save Job'; btn.disabled = false;
+        resetBtn();
         closeSaveJob();
-        ['sj-address','sj-customer','sj-phone','sj-phone2','sj-notes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+        ['sj-address','sj-customer','sj-phone','sj-phone2','sj-notes'].forEach(id => {
+          const el = document.getElementById(id); if(el) el.value='';
+        });
       }, 1500);
+
     } catch(e) {
-      btn.textContent = '💾 Save Job'; btn.disabled = false;
-      alert('Error saving. Please try again.');
+      clearTimeout(safetyTimer);
+      resetBtn();
+      console.error('Save error:', e);
+      alert('Error saving: ' + (e.message||'Unknown error') + '\n\nPlease try again.');
     }
   }
 
@@ -2656,17 +2688,25 @@
     const phone2   = document.getElementById('ej-phone2').value.trim();
     const notes    = document.getElementById('ej-notes').value.trim();
     if (!address) return alert('Address is required.');
+    if (!window._uid) return alert('Not logged in. Please refresh.');
     const job   = _allJobs.find(j=>j.id===id); if(!job) return;
     const calcs = job.calcs||[];
-    const newSF = calcs.reduce((s,c)=>s+(c.totalSF||0),0);
+    const newSF = calcs.reduce((s,c)=>s+(Number(c.totalSF)||0),0);
     const btn   = document.getElementById('ej-save-btn');
+    const resetBtn = () => { btn.textContent='✅ Save Changes'; btn.disabled=false; };
     btn.textContent='⏳ Saving...'; btn.disabled=true;
+    const safetyTimer = setTimeout(() => { resetBtn(); alert('Save timed out. Please try again.'); }, 12000);
     try {
       await window._updateJob(id, { name:address, address, customer, phone, phone2, notes, calcs, totalSF:newSF });
       Object.assign(job, {name:address,address,customer,phone,phone2,notes,calcs,totalSF:newSF});
+      clearTimeout(safetyTimer);
       btn.textContent='✅ Saved!';
-      setTimeout(()=>{ btn.textContent='✅ Save Changes'; btn.disabled=false; closeEditJob(); loadJobsPage(); },1200);
-    } catch(e) { btn.textContent='✅ Save Changes'; btn.disabled=false; alert('Error saving.'); }
+      setTimeout(()=>{ resetBtn(); closeEditJob(); loadJobsPage(); },1200);
+    } catch(e) {
+      clearTimeout(safetyTimer);
+      resetBtn();
+      alert('Error saving: '+(e.message||'Please try again.'));
+    }
   }
 
   function closeEditJob() {
