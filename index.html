@@ -15,7 +15,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getFirestore, collection, addDoc, getDocs, getDoc, deleteDoc, doc, updateDoc, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     const app = initializeApp({
       apiKey: "AIzaSyB_w82VhilliRBcfge2dM7e3VGcQhdon78",
@@ -69,15 +69,19 @@
 
     // Add calculation to existing job
     window._addCalcToJob = async (jobId, calc) => {
-      const ref = doc(db, 'users', window._uid, 'projects', jobId);
-      // get current calcs array, append new one
-      const snap = await getDocs(collection(db, 'users', window._uid, 'projects'));
-      const job  = snap.docs.find(d => d.id === jobId)?.data();
-      const calcs = job?.calcs || [];
+      const ref  = doc(db, 'users', window._uid, 'projects', jobId);
+      const snap = await getDoc(ref);
+      const job  = snap.data() || {};
+      const calcs = job.calcs || [];
       calcs.push({ ...calc, savedAt: new Date().toISOString() });
-      // also update totalSF
       const newTotalSF = calcs.reduce((s,c) => s + (c.totalSF||0), 0);
       await updateDoc(ref, { calcs, totalSF: newTotalSF });
+    };
+
+    // Update full job
+    window._updateJob = async (jobId, data) => {
+      const ref = doc(db, 'users', window._uid, 'projects', jobId);
+      await updateDoc(ref, data);
     };
   </script>
   <title>Maman Calculators</title>
@@ -1514,6 +1518,38 @@
   </div>
 </div>
 
+<!-- ─── EDIT JOB SHEET ─── -->
+<div class="picker-overlay hidden" id="edit-job-overlay" onclick="closeEditJob()">
+  <div class="picker-sheet" onclick="event.stopPropagation()" style="max-height:92vh;overflow-y:auto;">
+    <div class="picker-handle"></div>
+    <div class="picker-title">✏️ Edit Job</div>
+    <input type="hidden" id="ej-id" />
+    <div class="save-job-field">
+      <div class="save-job-label">📍 Job Address</div>
+      <input class="save-job-input" type="text" id="ej-address" placeholder="123 Main St" />
+    </div>
+    <div class="save-job-field">
+      <div class="save-job-label">👤 Customer Name</div>
+      <input class="save-job-input" type="text" id="ej-customer" placeholder="John Smith" />
+    </div>
+    <div class="save-job-field">
+      <div class="save-job-label">📞 Phone</div>
+      <input class="save-job-input" type="tel" id="ej-phone" placeholder="(917) 000-0000" inputmode="tel" />
+    </div>
+    <div class="save-job-field">
+      <div class="save-job-label">📝 Notes</div>
+      <textarea class="save-job-input save-job-textarea" id="ej-notes" placeholder="Notes…"></textarea>
+    </div>
+    <!-- Calculations list with delete per calc -->
+    <div class="save-job-field">
+      <div class="save-job-label">📊 Calculations</div>
+      <div id="ej-calcs-list"></div>
+    </div>
+    <button class="proj-save-btn-full" id="ej-save-btn" onclick="confirmEditJob()">✅ Save Changes</button>
+    <button class="picker-cancel" onclick="closeEditJob()">Cancel</button>
+  </div>
+</div>
+
 <!-- ─── SAVE JOB SHEET ─── -->
 <div class="picker-overlay hidden" id="save-job-overlay" onclick="closeSaveJob()">
   <div class="picker-sheet" onclick="event.stopPropagation()" style="max-height:92vh;overflow-y:auto;">
@@ -2395,7 +2431,7 @@
     }
   }
 
-  // ── JOBS PAGE ──
+  // ── JOBS PAGE (clean rewrite) ──
   let _allJobs = [];
 
   async function loadJobsPage() {
@@ -2411,7 +2447,7 @@
       _allJobs = await window._loadProjects();
       renderJobsList(_allJobs);
     } catch(e) {
-      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">Error loading jobs.</div>';
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">Error loading. Please try again.</div>';
     }
   }
 
@@ -2419,35 +2455,27 @@
     const list  = document.getElementById('jobs-page-list');
     const empty = document.getElementById('jobs-page-empty');
     const noRes = document.getElementById('jobs-no-results');
-    list.innerHTML = '';
-    empty.style.display = 'none';
-    noRes.style.display = 'none';
-
-    if (!_allJobs.length) { empty.style.display = 'block'; return; }
-    if (!jobs.length)     { noRes.style.display = 'block'; return; }
-
+    list.innerHTML = ''; empty.style.display='none'; noRes.style.display='none';
+    if (!_allJobs.length) { empty.style.display='block'; return; }
+    if (!jobs.length)     { noRes.style.display='block'; return; }
     jobs.forEach(job => renderJobCard(job, list));
-
     // Stats
     const totalSF = jobs.reduce((s,j)=>s+(j.totalSF||0),0);
-    const stats = document.getElementById('jobs-stats');
-    stats.innerHTML = `
-      <div class="jobs-stat-chip"><span>${jobs.length}</span> jobs</div>
-      <div class="jobs-stat-chip"><span>${totalSF.toLocaleString('en-US',{maximumFractionDigits:0})}</span> total SF</div>
-    `;
+    document.getElementById('jobs-stats').innerHTML =
+      `<div class="jobs-stat-chip"><span>${jobs.length}</span> jobs</div>` +
+      `<div class="jobs-stat-chip"><span>${totalSF.toLocaleString('en-US',{maximumFractionDigits:0})}</span> total SF</div>`;
   }
 
-  function filterJobs(query) {
-    const q = query.trim().toLowerCase();
-    document.getElementById('jobs-search-clear').classList.toggle('hidden', !q);
-    if (!q) { renderJobsList(_allJobs); return; }
-    const filtered = _allJobs.filter(j =>
-      (j.address||j.name||'').toLowerCase().includes(q) ||
-      (j.customer||'').toLowerCase().includes(q) ||
-      (j.phone||'').toLowerCase().includes(q) ||
-      (j.notes||'').toLowerCase().includes(q)
-    );
-    renderJobsList(filtered);
+  function filterJobs(q) {
+    const query = q.trim().toLowerCase();
+    document.getElementById('jobs-search-clear').classList.toggle('hidden', !query);
+    if (!query) { renderJobsList(_allJobs); return; }
+    renderJobsList(_allJobs.filter(j =>
+      (j.address||j.name||'').toLowerCase().includes(query) ||
+      (j.customer||'').toLowerCase().includes(query) ||
+      (j.phone||'').toLowerCase().includes(query) ||
+      (j.notes||'').toLowerCase().includes(query)
+    ));
   }
 
   function clearJobSearch() {
@@ -2459,36 +2487,36 @@
   function renderJobCard(job, container) {
     const date   = job.createdAt?.toDate ? job.createdAt.toDate().toLocaleDateString() : '';
     const sfText = job.totalSF ? job.totalSF.toLocaleString('en-US',{maximumFractionDigits:0})+' SF' : '';
-    const icon   = '📋';
-    // Build calcs section — show all calculations saved to this job
-    const calcs = job.calcs || [];
+    const calcs  = job.calcs || [];
     const calcIcons = {asphalt:'🛣',concrete:'🏗',sand:'🪨',curb:'🚧',measurements:'📐'};
+
+    // Build calcs HTML
     let calcsHTML = '';
     if (calcs.length) {
       calcsHTML = calcs.map((c,i) => {
-        const ci = calcIcons[c.source||'measurements']||'📋';
-        const dt = c.savedAt ? new Date(c.savedAt).toLocaleDateString() : '';
-        const alines = c.areas?.map(a=>a.name+': '+a.w+'×'+a.h+'='+a.sf.toLocaleString()+' SF').join('<br>')||'';
+        const ci  = calcIcons[c.source||'measurements']||'📋';
+        const dt  = c.savedAt ? new Date(c.savedAt).toLocaleDateString() : '';
+        const src = (c.source||'calculation').charAt(0).toUpperCase()+(c.source||'').slice(1);
+        const al  = (c.areas||[]).map(a=>a.name+': '+a.w+'×'+a.h+'='+a.sf.toLocaleString()+' SF').join('<br>') || (c.summary||'').replace(/\n/g,'<br>');
         return `<div class="calc-entry">
-          <div class="calc-entry-header">${ci} <b>${(c.source||'').charAt(0).toUpperCase()+(c.source||'').slice(1)||'Calculation'}</b> <span style="font-size:10px;color:var(--text3);float:right;">${dt}</span></div>
-          ${alines ? `<div class="job-areas-list">${alines}</div>` : (c.summary ? `<div class="job-areas-list">${c.summary.replace(/\n/g,'<br>')}</div>` : '')}
+          <div class="calc-entry-header">${ci} <b>${src}</b>${c.totalSF?' · '+c.totalSF.toLocaleString()+' SF':''} <span style="font-size:10px;color:var(--text3);float:right;">${dt}</span></div>
+          ${al?`<div class="job-areas-list">${al}</div>`:''}
+          <button style="background:none;border:none;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;padding:4px 0 0;" onclick="deleteCalcFromJob('${job.id}',${i})">🗑 Remove this calculation</button>
         </div>`;
       }).join('');
-    } else {
-      // legacy job without calcs array
-      let areaLines = '';
-      if (job.areas?.length) areaLines = job.areas.map(a=>a.name+': '+a.w+'×'+a.h+'='+a.sf.toLocaleString()+' SF').join('<br>');
-      else if (job.summary) areaLines = job.summary.replace(/\n/g,'<br>');
-      if (areaLines) calcsHTML = `<div class="calc-entry"><div class="job-areas-list">${areaLines}</div></div>`;
+    } else if (job.areas?.length || job.summary) {
+      // legacy single calc
+      const al = job.areas?.map(a=>a.name+': '+a.w+'×'+a.h+'='+a.sf.toLocaleString()+' SF').join('<br>') || (job.summary||'').replace(/\n/g,'<br>');
+      calcsHTML = `<div class="calc-entry"><div class="job-areas-list">${al}</div></div>`;
     }
-    let areaLines = ''; // keep for email compat
+
     const card = document.createElement('div');
-    card.className = 'job-card'; card.id = 'jcard-'+job.id;
+    card.className='job-card'; card.id='jcard-'+job.id;
     card.innerHTML = `
       <div class="job-card-header" onclick="toggleJobCard('${job.id}')">
-        <div class="job-card-icon">${icon}</div>
+        <div class="job-card-icon">📍</div>
         <div class="job-card-body">
-          <div class="job-card-address">${job.address||job.name}</div>
+          <div class="job-card-address">${job.address||job.name||'Unnamed Job'}</div>
           <div class="job-card-customer">${job.customer?'👤 '+job.customer:''}${job.phone?' · 📞 '+job.phone:''}</div>
         </div>
         <div>
@@ -2497,138 +2525,189 @@
         </div>
       </div>
       <div class="job-card-details" id="jdetails-${job.id}">
-        ${job.customer?`<div class="job-detail-row"><span class="jk">Customer</span><span class="jv">${job.customer}</span></div>`:''}
-        ${job.phone   ?`<div class="job-detail-row"><span class="jk">Phone</span><span class="jv">${job.phone}</span></div>`:''}
-        ${sfText      ?`<div class="job-detail-row"><span class="jk">Total SF</span><span class="jv">${sfText}</span></div>`:''}
-        ${job.price   ?`<div class="job-detail-row"><span class="jk">Price/SF</span><span class="jv">$${job.price}</span></div>`:''}
-        ${calcsHTML ? `<div style="margin:4px 0 8px;">${calcsHTML}</div>` : ''}
-        <div style="margin:8px 0 4px;">
-          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:4px;">📝 Notes</div>
-          <textarea class="job-note-editor" id="jnote-${job.id}" placeholder="Add or edit notes…">${job.notes||''}</textarea>
-          <button class="note-save-btn" onclick="saveJobNote('${job.id}')">Save Note</button>
-        </div>
+        ${calcsHTML?`<div style="margin-bottom:10px;">${calcsHTML}</div>`:''}
+        ${job.notes?`<div style="background:var(--card2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text2);margin-bottom:10px;">📝 ${job.notes}</div>`:''}
         <div class="job-actions">
           ${job.areas?.length?`<button class="job-action-btn jab-load" onclick="loadJobToMeas('${job.id}')">📐 Load</button>`:''}
           ${job.phone?`<button class="job-action-btn jab-call" onclick="window.location.href='tel:${job.phone.replace(/\D/g,'')}'">📞 Call</button>`:''}
-          <button class="job-action-btn jab-email" onclick='emailJobSummary(${JSON.stringify(job)})'>📧 Email</button>
+          <button class="job-action-btn jab-email" onclick='emailJobCard("${job.id}")'>📧 Email</button>
+          <button class="job-action-btn" style="background:#1a4a8a;color:#5b9bd5;" onclick='openEditJob("${job.id}")'>✏️ Edit</button>
           <button class="job-action-btn jab-del" onclick="deleteJobCard('${job.id}')">🗑 Del</button>
         </div>
       </div>`;
     container.appendChild(card);
   }
 
-  function toggleJobCard(id) { document.getElementById('jdetails-'+id).classList.toggle('open'); }
+  function toggleJobCard(id) {
+    document.getElementById('jdetails-'+id).classList.toggle('open');
+  }
 
-  async function saveJobNote(id) {
-    const notes = document.getElementById('jnote-'+id).value.trim();
-    const btn = event.target;
-    btn.textContent = '⏳'; btn.disabled = true;
+  async function deleteCalcFromJob(jobId, calcIndex) {
+    if (!confirm('Remove this calculation?')) return;
+    const job = _allJobs.find(j=>j.id===jobId); if(!job) return;
+    const calcs = [...(job.calcs||[])];
+    calcs.splice(calcIndex, 1);
+    const newSF = calcs.reduce((s,c)=>s+(c.totalSF||0),0);
     try {
-      await window._updateProjectNote(id, notes);
-      // update local cache
-      const job = _allJobs.find(j=>j.id===id);
-      if (job) job.notes = notes;
-      btn.textContent = '✅ Saved';
-      setTimeout(() => { btn.textContent = 'Save Note'; btn.disabled = false; }, 1500);
-    } catch(e) {
-      btn.textContent = 'Save Note'; btn.disabled = false;
-      alert('Error saving note.');
-    }
+      await window._updateJob(jobId, { calcs, totalSF: newSF });
+      job.calcs = calcs; job.totalSF = newSF;
+      // re-render
+      const old = document.getElementById('jcard-'+jobId);
+      if (old) { const list = old.parentNode; old.remove(); renderJobCard(job, list); }
+    } catch(e) { alert('Error removing calculation.'); }
   }
 
   async function deleteJobCard(id) {
-    if (!confirm('Delete this job?')) return;
+    if (!confirm('Delete this job permanently?')) return;
     try {
       await window._deleteProject(id);
+      _allJobs = _allJobs.filter(j=>j.id!==id);
       const c = document.getElementById('jcard-'+id); if(c) c.remove();
-      if (!document.getElementById('jobs-page-list').children.length) document.getElementById('jobs-page-empty').style.display='block';
+      if (!document.getElementById('jobs-page-list').children.length) {
+        renderJobsList([]);
+      }
     } catch(e) { alert('Error deleting.'); }
   }
 
   function loadJobToMeas(id) {
-    window._loadProjects().then(jobs => {
-      const job = jobs.find(j=>j.id===id);
-      if (!job) return;
-      switchTab('meas', document.querySelector('.pill-tab:nth-child(5)'));
-      loadProject(job);
-    });
+    const job = _allJobs.find(j=>j.id===id); if(!job) return;
+    switchTab('meas', document.querySelector('.pill-tab:nth-child(5)'));
+    document.getElementById('meas-rows').innerHTML='';
+    measRowCount=0;
+    (job.areas||[]).forEach(a=>measAddRow(a.name,a.w,a.h));
+    document.getElementById('meas-price').value=job.price||'';
+    document.getElementById('meas-extra').value=job.extra||'';
+    measUpdateTotals();
+    const toast=document.getElementById('share-toast');
+    toast.textContent='📍 Loaded: '+(job.address||job.name);
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'),2500);
   }
 
-  function emailJobSummary(job) {
-    const lines = (job.areas||[]).map(a=>a.name+': '+a.w+'×'+a.h+'='+a.sf.toLocaleString()+' SF').join('\n')||job.summary||'';
-    const body  = '📋 JOB SUMMARY\n══════════════════════\n📍 '+(job.address||job.name)+'\n'+(job.customer?'👤 '+job.customer+'\n':'')+(job.phone?'📞 '+job.phone+'\n':'')+(job.notes?'📝 '+job.notes+'\n':'')+'\n'+(lines?'AREAS:\n'+lines+'\n\n':'')+(job.totalSF?'Total SF: '+job.totalSF.toLocaleString()+' SF\n':'')+(job.price?'Price/SF: $'+job.price+'\n':'')+getSignature();
+  function emailJobCard(id) {
+    const job = _allJobs.find(j=>j.id===id); if(!job) return;
+    const calcs = job.calcs||[];
+    let calcLines = calcs.map(c=>{
+      const src=(c.source||'Calculation').charAt(0).toUpperCase()+(c.source||'').slice(1);
+      const al=(c.areas||[]).map(a=>a.name+': '+a.w+'×'+a.h+'='+a.sf.toLocaleString()+' SF').join('\n')||(c.summary||'');
+      return src+(al?':\n'+al:'');
+    }).join('\n\n');
+    if (!calcLines && (job.areas?.length||job.summary)) {
+      calcLines = (job.areas||[]).map(a=>a.name+': '+a.w+'×'+a.h+'='+a.sf.toLocaleString()+' SF').join('\n')||(job.summary||'');
+    }
+    const body='📋 JOB SUMMARY\n══════════════════════\n📍 '+(job.address||job.name)+'\n'+(job.customer?'👤 '+job.customer+'\n':'')+(job.phone?'📞 '+job.phone+'\n':'')+(job.notes?'📝 '+job.notes+'\n':'')+'\n'+(calcLines?calcLines+'\n\n':'')+(job.totalSF?'Total SF: '+job.totalSF.toLocaleString()+' SF\n':'')+getSignature();
     window.location.href='mailto:?subject=Job: '+encodeURIComponent(job.address||job.name)+'&body='+encodeURIComponent(body);
   }
 
+  // ── EDIT JOB ──
+  function openEditJob(id) {
+    const job = _allJobs.find(j=>j.id===id); if(!job) return;
+    document.getElementById('ej-id').value      = id;
+    document.getElementById('ej-address').value  = job.address||job.name||'';
+    document.getElementById('ej-customer').value = job.customer||'';
+    document.getElementById('ej-phone').value    = job.phone||'';
+    document.getElementById('ej-notes').value    = job.notes||'';
+    // render calcs list
+    const calcs = job.calcs||[];
+    const calcIcons = {asphalt:'🛣',concrete:'🏗',sand:'🪨',curb:'🚧',measurements:'📐'};
+    const ejList = document.getElementById('ej-calcs-list');
+    if (!calcs.length) {
+      ejList.innerHTML = '<div style="color:var(--text3);font-size:13px;">No calculations saved yet.</div>';
+    } else {
+      ejList.innerHTML = calcs.map((c,i)=>{
+        const ci  = calcIcons[c.source||'measurements']||'📋';
+        const src = (c.source||'calculation').charAt(0).toUpperCase()+(c.source||'').slice(1);
+        const dt  = c.savedAt ? new Date(c.savedAt).toLocaleDateString() : '';
+        return `<div style="display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+          <span style="font-size:18px;">${ci}</span>
+          <div style="flex:1;font-size:13px;font-weight:700;color:var(--text);">${src} ${c.totalSF?'· '+c.totalSF.toLocaleString()+' SF':''}<div style="font-size:11px;color:var(--text3);">${dt}</div></div>
+          <button style="background:#3a0808;border:none;border-radius:8px;padding:6px 10px;color:#ff6b6b;font-size:12px;font-weight:700;cursor:pointer;" onclick="removeCalcInEdit(${i})">🗑 Remove</button>
+        </div>`;
+      }).join('');
+    }
+    document.getElementById('edit-job-overlay').classList.remove('hidden');
+  }
+
+  function removeCalcInEdit(idx) {
+    if (!confirm('Remove this calculation?')) return;
+    const id = document.getElementById('ej-id').value;
+    const job = _allJobs.find(j=>j.id===id); if(!job) return;
+    const calcs = [...(job.calcs||[])];
+    calcs.splice(idx,1);
+    job.calcs = calcs;
+    openEditJob(id); // re-render
+  }
+
+  async function confirmEditJob() {
+    const id       = document.getElementById('ej-id').value;
+    const address  = document.getElementById('ej-address').value.trim();
+    const customer = document.getElementById('ej-customer').value.trim();
+    const phone    = document.getElementById('ej-phone').value.trim();
+    const notes    = document.getElementById('ej-notes').value.trim();
+    if (!address) return alert('Address is required.');
+    const job   = _allJobs.find(j=>j.id===id); if(!job) return;
+    const calcs = job.calcs||[];
+    const newSF = calcs.reduce((s,c)=>s+(c.totalSF||0),0);
+    const btn   = document.getElementById('ej-save-btn');
+    btn.textContent='⏳ Saving...'; btn.disabled=true;
+    try {
+      await window._updateJob(id, { name:address, address, customer, phone, notes, calcs, totalSF:newSF });
+      Object.assign(job, {name:address,address,customer,phone,notes,calcs,totalSF:newSF});
+      btn.textContent='✅ Saved!';
+      setTimeout(()=>{ btn.textContent='✅ Save Changes'; btn.disabled=false; closeEditJob(); loadJobsPage(); },1200);
+    } catch(e) { btn.textContent='✅ Save Changes'; btn.disabled=false; alert('Error saving.'); }
+  }
+
+  function closeEditJob() {
+    document.getElementById('edit-job-overlay').classList.add('hidden');
+  }
+
+  // ── OPEN PROJECTS SHEET (measurements tab) ──
   async function openProjects() {
     document.getElementById('projects-overlay').classList.remove('hidden');
     const list  = document.getElementById('projects-list');
     const empty = document.getElementById('projects-empty');
     list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">Loading...</div>';
     empty.style.display = 'none';
-
     try {
       const projects = await window._loadProjects();
       list.innerHTML = '';
-      if (projects.length === 0) {
-        empty.style.display = 'block';
-        return;
-      }
+      if (!projects.length) { empty.style.display='block'; return; }
       projects.forEach(proj => {
-        const date     = proj.createdAt?.toDate ? proj.createdAt.toDate().toLocaleDateString() : '';
-        const customer = proj.customer ? ' · ' + proj.customer : '';
-        const phone    = proj.phone    ? ' · ' + proj.phone    : '';
+        const date = proj.createdAt?.toDate ? proj.createdAt.toDate().toLocaleDateString() : '';
         const div = document.createElement('div');
         div.className = 'proj-item';
         div.innerHTML = `
           <div class="proj-item-body" onclick="loadProject(${JSON.stringify(proj).replace(/"/g,'&quot;')})">
-            <div class="proj-item-name">📍 ${proj.address || proj.name}</div>
-            <div class="proj-item-meta">${proj.areas?.length || 0} areas${customer}${phone}</div>
-            <div class="proj-item-meta">${date}</div>
+            <div class="proj-item-name">📍 ${proj.address||proj.name}</div>
+            <div class="proj-item-meta">${proj.customer?'👤 '+proj.customer+' · ':''} ${date}</div>
           </div>
           <div class="proj-item-sf">${(proj.totalSF||0).toLocaleString('en-US',{maximumFractionDigits:0})} SF</div>
-          <button class="proj-item-del" onclick="event.stopPropagation();deleteProject('${proj.id}',this.closest('.proj-item'))">✕</button>
-        `;
+          <button class="proj-item-del" onclick="event.stopPropagation();deleteProject('${proj.id}',this.closest('.proj-item'))">✕</button>`;
         list.appendChild(div);
       });
-    } catch(e) {
-      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">Error loading projects.</div>';
-    }
+    } catch(e) { list.innerHTML='<div style="color:var(--text3);padding:12px;">Error loading.</div>'; }
   }
 
-  function closeProjects() {
-    document.getElementById('projects-overlay').classList.add('hidden');
-  }
+  function closeProjects() { document.getElementById('projects-overlay').classList.add('hidden'); }
 
   function loadProject(proj) {
     closeProjects();
-    // Clear and reload areas
-    document.getElementById('meas-rows').innerHTML = '';
-    measRowCount = 0;
-    (proj.areas || []).forEach(a => measAddRow(a.name, a.w, a.h));
-    // Set price/extra
-    document.getElementById('meas-price').value = proj.price || '';
-    document.getElementById('meas-extra').value = proj.extra || '';
+    document.getElementById('meas-rows').innerHTML='';
+    measRowCount=0;
+    (proj.areas||[]).forEach(a=>measAddRow(a.name,a.w,a.h));
+    document.getElementById('meas-price').value=proj.price||'';
+    document.getElementById('meas-extra').value=proj.extra||'';
     measUpdateTotals();
-    // Show a toast with job info
-    const toast = document.getElementById('share-toast');
-    toast.textContent = '📍 Loaded: ' + (proj.address || proj.name);
+    const toast=document.getElementById('share-toast');
+    toast.textContent='📍 Loaded: '+(proj.address||proj.name);
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2500);
+    setTimeout(()=>toast.classList.remove('show'),2500);
   }
 
   async function deleteProject(id, el) {
-    if (!confirm('Delete this project?')) return;
-    try {
-      await window._deleteProject(id);
-      el.remove();
-      // Check if empty
-      if (document.getElementById('projects-list').children.length === 0) {
-        document.getElementById('projects-empty').style.display = 'block';
-      }
-    } catch(e) {
-      alert('Error deleting. Please try again.');
-    }
+    if (!confirm('Delete?')) return;
+    try { await window._deleteProject(id); if(el) el.remove(); } catch(e) { alert('Error.'); }
   }
 
   // Init measurements
