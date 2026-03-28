@@ -171,6 +171,37 @@
     .brand img { width: 32px; height: 32px; border-radius: 8px; object-fit: contain; }
     .brand-name { font-size: 16px; font-weight: 800; color: var(--text); letter-spacing: 0.3px; }
     .top-right { display: flex; align-items: center; gap: 8px; }
+    /* Full-screen Jobs panel */
+    .jobs-panel {
+      position: fixed; inset: 0; z-index: 400;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      transition: background 0.2s;
+      overflow: hidden;
+    }
+    .jobs-panel.hidden { display: none; }
+    .jobs-panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 10;
+      flex-shrink: 0;
+    }
+    .jobs-panel-back {
+      background: none; border: none; cursor: pointer;
+      font-size: 15px; font-weight: 800; color: var(--accent);
+      padding: 4px; font-family: inherit;
+    }
+    .jobs-panel-title {
+      font-size: 17px; font-weight: 900; color: var(--text);
+    }
+    .jobs-panel-list {
+      flex: 1; overflow-y: auto; padding: 10px 0 80px;
+    }
+    /* job cards inside panel get side padding */
+    .jobs-panel-list .job-card { margin: 0 16px 12px; }
+
     .jobs-quick-btn {
       background: var(--accent); color: #fff;
       border: none; border-radius: 20px;
@@ -879,7 +910,7 @@
     <span class="brand-name">Maman Calculators</span>
   </div>
   <div class="top-right">
-    <button class="jobs-quick-btn" onclick="switchTab('jobs', document.querySelector('.pill-tab:nth-child(6)'))">📋 Jobs</button>
+    <button class="jobs-quick-btn" onclick="openJobsPanel()">📋 Jobs</button>
     <button class="day-night-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
     <button class="user-btn" onclick="showUserMenu()" id="user-avatar">👤</button>
   </div>
@@ -1530,6 +1561,35 @@
   </div>
 </div>
 
+<!-- ─── JOBS FULL PANEL ─── -->
+<div class="jobs-panel hidden" id="jobs-panel">
+  <div class="jobs-panel-header">
+    <button class="jobs-panel-back" onclick="closeJobsPanel()">← Back</button>
+    <div class="jobs-panel-title">📋 My Jobs</div>
+    <div style="width:60px;"></div>
+  </div>
+  <!-- Search -->
+  <div style="padding:10px 16px 0;">
+    <div class="jobs-search-wrap">
+      <span class="jobs-search-icon">🔍</span>
+      <input class="jobs-search-input" type="text" id="jobs-panel-search" placeholder="Search address, customer, phone…" oninput="filterJobsPanel(this.value)" />
+      <button class="jobs-search-clear hidden" id="jobs-panel-clear" onclick="clearJobsPanelSearch()">✕</button>
+    </div>
+    <div class="jobs-stats" id="jobs-panel-stats"></div>
+  </div>
+  <!-- List -->
+  <div class="jobs-panel-list" id="jobs-panel-list"></div>
+  <div id="jobs-panel-empty" style="text-align:center;padding:60px 20px;color:var(--text3);display:none;">
+    <div style="font-size:48px;margin-bottom:14px;">📂</div>
+    <div style="font-size:17px;font-weight:800;margin-bottom:8px;color:var(--text);">No saved jobs yet</div>
+    <div style="font-size:13px;">Tap 💾 Save Job on any calculator<br>to save your first job here.</div>
+  </div>
+  <div id="jobs-panel-noresults" style="text-align:center;padding:40px 20px;color:var(--text3);display:none;">
+    <div style="font-size:32px;margin-bottom:8px;">🔍</div>
+    <div style="font-size:15px;font-weight:700;">No results found</div>
+  </div>
+</div>
+
 <!-- ─── EDIT JOB SHEET ─── -->
 <div class="picker-overlay hidden" id="edit-job-overlay" onclick="closeEditJob()">
   <div class="picker-sheet" onclick="event.stopPropagation()" style="max-height:92vh;overflow-y:auto;">
@@ -1652,6 +1712,70 @@
 
 
 <script>
+  // ── JOBS PANEL ──
+  let _panelJobs = [];
+
+  async function openJobsPanel() {
+    document.getElementById('jobs-panel').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    await loadJobsPanelData();
+  }
+
+  function closeJobsPanel() {
+    document.getElementById('jobs-panel').classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  async function loadJobsPanelData() {
+    const list  = document.getElementById('jobs-panel-list');
+    const empty = document.getElementById('jobs-panel-empty');
+    const noRes = document.getElementById('jobs-panel-noresults');
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);">Loading…</div>';
+    empty.style.display = 'none';
+    noRes.style.display = 'none';
+    document.getElementById('jobs-panel-search').value = '';
+    document.getElementById('jobs-panel-clear').classList.add('hidden');
+    try {
+      _panelJobs = await window._loadProjects();
+      _allJobs   = _panelJobs; // keep in sync
+      renderJobsPanel(_panelJobs);
+    } catch(e) {
+      list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);">Error loading. Please try again.</div>';
+    }
+  }
+
+  function renderJobsPanel(jobs) {
+    const list  = document.getElementById('jobs-panel-list');
+    const empty = document.getElementById('jobs-panel-empty');
+    const noRes = document.getElementById('jobs-panel-noresults');
+    list.innerHTML = ''; empty.style.display='none'; noRes.style.display='none';
+    if (!_panelJobs.length) { empty.style.display='block'; return; }
+    if (!jobs.length)       { noRes.style.display='block'; return; }
+    jobs.forEach(job => renderJobCard(job, list));
+    const totalSF = jobs.reduce((s,j)=>s+(j.totalSF||0),0);
+    document.getElementById('jobs-panel-stats').innerHTML =
+      `<div class="jobs-stat-chip"><span>${jobs.length}</span> jobs</div>` +
+      `<div class="jobs-stat-chip"><span>${totalSF.toLocaleString('en-US',{maximumFractionDigits:0})}</span> total SF</div>`;
+  }
+
+  function filterJobsPanel(q) {
+    const query = q.trim().toLowerCase();
+    document.getElementById('jobs-panel-clear').classList.toggle('hidden', !query);
+    if (!query) { renderJobsPanel(_panelJobs); return; }
+    renderJobsPanel(_panelJobs.filter(j =>
+      (j.address||j.name||'').toLowerCase().includes(query) ||
+      (j.customer||'').toLowerCase().includes(query) ||
+      (j.phone||'').toLowerCase().includes(query) ||
+      (j.notes||'').toLowerCase().includes(query)
+    ));
+  }
+
+  function clearJobsPanelSearch() {
+    document.getElementById('jobs-panel-search').value = '';
+    document.getElementById('jobs-panel-clear').classList.add('hidden');
+    renderJobsPanel(_panelJobs);
+  }
+
   // ── User menu ──
   function showUserMenu() { document.getElementById('user-menu').classList.remove('hidden'); }
   function hideUserMenu() { document.getElementById('user-menu').classList.add('hidden'); }
@@ -2611,16 +2735,21 @@
     if (!confirm('Delete this job permanently?')) return;
     try {
       await window._deleteProject(id);
-      _allJobs = _allJobs.filter(j=>j.id!==id);
+      _allJobs    = _allJobs.filter(j=>j.id!==id);
+      _panelJobs  = _panelJobs.filter(j=>j.id!==id);
       const c = document.getElementById('jcard-'+id); if(c) c.remove();
-      if (!document.getElementById('jobs-page-list').children.length) {
-        renderJobsList([]);
+      // refresh whichever list is visible
+      if (!document.getElementById('jobs-panel').classList.contains('hidden')) {
+        renderJobsPanel(_panelJobs);
+      } else {
+        renderJobsList(_allJobs);
       }
     } catch(e) { alert('Error deleting.'); }
   }
 
   function loadJobToMeas(id) {
-    const job = _allJobs.find(j=>j.id===id); if(!job) return;
+    const job = _allJobs.find(j=>j.id===id)||_panelJobs.find(j=>j.id===id); if(!job) return;
+    closeJobsPanel();
     switchTab('meas', document.querySelector('.pill-tab:nth-child(5)'));
     document.getElementById('meas-rows').innerHTML='';
     measRowCount=0;
@@ -2710,7 +2839,14 @@
       Object.assign(job, {name:address,address,customer,phone,phone2,notes,calcs,totalSF:newSF});
       clearTimeout(safetyTimer);
       btn.textContent='✅ Saved!';
-      setTimeout(()=>{ resetBtn(); closeEditJob(); loadJobsPage(); },1200);
+      setTimeout(()=>{
+        resetBtn(); closeEditJob();
+        if (!document.getElementById('jobs-panel').classList.contains('hidden')) {
+          loadJobsPanelData();
+        } else {
+          loadJobsPage();
+        }
+      },1200);
     } catch(e) {
       clearTimeout(safetyTimer);
       resetBtn();
