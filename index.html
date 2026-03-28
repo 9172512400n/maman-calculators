@@ -66,6 +66,19 @@
     window._updateProjectNote = async (id, notes) => {
       await updateDoc(doc(db, 'users', window._uid, 'projects', id), { notes });
     };
+
+    // Add calculation to existing job
+    window._addCalcToJob = async (jobId, calc) => {
+      const ref = doc(db, 'users', window._uid, 'projects', jobId);
+      // get current calcs array, append new one
+      const snap = await getDocs(collection(db, 'users', window._uid, 'projects'));
+      const job  = snap.docs.find(d => d.id === jobId)?.data();
+      const calcs = job?.calcs || [];
+      calcs.push({ ...calc, savedAt: new Date().toISOString() });
+      // also update totalSF
+      const newTotalSF = calcs.reduce((s,c) => s + (c.totalSF||0), 0);
+      await updateDoc(ref, { calcs, totalSF: newTotalSF });
+    };
   </script>
   <title>Maman Calculators</title>
   <style>
@@ -534,7 +547,13 @@
     .job-detail-row:last-child { border: none; }
     .job-detail-row .jk { color: var(--text3); font-weight: 600; }
     .job-detail-row .jv { color: var(--text); font-weight: 700; }
-    .job-areas-list { font-size: 12px; color: var(--text2); line-height: 1.8; margin: 8px 0; }
+    .job-areas-list { font-size: 12px; color: var(--text2); line-height: 1.8; margin: 4px 0 0; }
+    .calc-entry {
+      background: var(--card2); border-radius: 10px;
+      padding: 10px 12px; margin-bottom: 8px;
+      border-left: 3px solid var(--accent);
+    }
+    .calc-entry-header { font-size: 13px; color: var(--text2); margin-bottom: 4px; }
 
     .job-actions {
       display: flex; gap: 8px; padding: 10px 16px 14px;
@@ -563,6 +582,33 @@
       transition: opacity 0.15s;
     }
     .proj-save-btn-full:active { opacity: 0.8; }
+
+    /* Save job mode toggle */
+    .sj-mode-row {
+      display: flex; gap: 8px; margin-bottom: 18px;
+    }
+    .sj-mode-btn {
+      flex: 1; padding: 12px 8px;
+      border-radius: 12px; border: 1.5px solid var(--border);
+      background: var(--card2); color: var(--text2);
+      font-size: 14px; font-weight: 800; cursor: pointer;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .sj-mode-btn.active { background: #1565c0; color: #fff; border-color: #1565c0; }
+
+    /* Existing job picker list */
+    .sj-job-option {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 12px; background: var(--card2);
+      border: 1.5px solid var(--border); border-radius: 12px;
+      margin-bottom: 8px; cursor: pointer; transition: all 0.15s;
+    }
+    .sj-job-option.selected { border-color: #4caf50; background: var(--accent-bg, #1a2a1a); }
+    .sj-job-option:active { opacity: 0.75; }
+    .sj-job-opt-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .sj-job-opt-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+    .sj-job-opt-check { margin-left: auto; font-size: 18px; color: #4caf50; display: none; }
+    .sj-job-option.selected .sj-job-opt-check { display: block; }
 
     /* Address autocomplete */
     .addr-suggestions {
@@ -1470,32 +1516,51 @@
 
 <!-- ─── SAVE JOB SHEET ─── -->
 <div class="picker-overlay hidden" id="save-job-overlay" onclick="closeSaveJob()">
-  <div class="picker-sheet" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;">
+  <div class="picker-sheet" onclick="event.stopPropagation()" style="max-height:92vh;overflow-y:auto;">
     <div class="picker-handle"></div>
     <div class="picker-title">💾 Save Job</div>
-    <div class="picker-sub">Add job details to save with your measurements</div>
 
-    <div class="save-job-field">
-      <div class="save-job-label">📍 Job Address</div>
-      <div style="position:relative;">
-        <input class="save-job-input" type="text" id="sj-address" placeholder="Start typing address…" autocomplete="off" oninput="searchAddress(this.value)" />
-        <div class="addr-suggestions hidden" id="addr-suggestions"></div>
+    <!-- New / Add to Existing toggle -->
+    <div class="sj-mode-row">
+      <button class="sj-mode-btn active" id="sj-new-btn" onclick="setSJMode('new')">➕ New Job</button>
+      <button class="sj-mode-btn" id="sj-existing-btn" onclick="setSJMode('existing')">📂 Add to Existing</button>
+    </div>
+
+    <!-- NEW JOB fields -->
+    <div id="sj-new-fields">
+      <div class="save-job-field">
+        <div class="save-job-label">📍 Job Address</div>
+        <div style="position:relative;">
+          <input class="save-job-input" type="text" id="sj-address" placeholder="Start typing address…" autocomplete="off" oninput="searchAddress(this.value)" />
+          <div class="addr-suggestions hidden" id="addr-suggestions"></div>
+        </div>
+      </div>
+      <div class="save-job-field">
+        <div class="save-job-label">👤 Customer Name</div>
+        <input class="save-job-input" type="text" id="sj-customer" placeholder="John Smith" autocomplete="name" />
+      </div>
+      <div class="save-job-field">
+        <div class="save-job-label">📞 Phone Number</div>
+        <input class="save-job-input" type="tel" id="sj-phone" placeholder="(917) 000-0000" autocomplete="tel" inputmode="tel" />
+      </div>
+      <div class="save-job-field">
+        <div class="save-job-label">📝 Notes</div>
+        <textarea class="save-job-input save-job-textarea" id="sj-notes" placeholder="Job details, material specs, access notes..."></textarea>
       </div>
     </div>
-    <div class="save-job-field">
-      <div class="save-job-label">👤 Customer Name</div>
-      <input class="save-job-input" type="text" id="sj-customer" placeholder="John Smith" autocomplete="name" />
-    </div>
-    <div class="save-job-field">
-      <div class="save-job-label">📞 Phone Number</div>
-      <input class="save-job-input" type="tel" id="sj-phone" placeholder="(917) 000-0000" autocomplete="tel" inputmode="tel" />
-    </div>
-    <div class="save-job-field">
-      <div class="save-job-label">📝 Notes</div>
-      <textarea class="save-job-input save-job-textarea" id="sj-notes" placeholder="Job details, material specs, access notes..."></textarea>
+
+    <!-- ADD TO EXISTING fields -->
+    <div id="sj-existing-fields" class="hidden">
+      <div class="save-job-field">
+        <div class="save-job-label">Select Job</div>
+        <div id="sj-existing-list">
+          <div style="text-align:center;padding:16px;color:var(--text3);">Loading jobs…</div>
+        </div>
+      </div>
     </div>
 
-    <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">Measurements Summary</div>
+    <!-- Calculation summary (always shown) -->
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">📊 Calculation to Save</div>
     <div class="save-job-summary" id="sj-summary"></div>
 
     <button class="proj-save-btn-full" id="sj-save-btn" onclick="confirmSaveJob()" style="margin-top:16px;">💾 Save Job</button>
@@ -2216,41 +2281,113 @@
     document.getElementById('save-job-overlay').classList.remove('hidden');
   }
 
+  let _sjMode = 'new';
+  let _sjSelectedJobId = null;
+
+  function setSJMode(mode) {
+    _sjMode = mode;
+    _sjSelectedJobId = null;
+    document.getElementById('sj-new-btn').classList.toggle('active', mode==='new');
+    document.getElementById('sj-existing-btn').classList.toggle('active', mode==='existing');
+    document.getElementById('sj-new-fields').classList.toggle('hidden', mode==='existing');
+    document.getElementById('sj-existing-fields').classList.toggle('hidden', mode==='new');
+    if (mode==='existing') loadExistingJobsList();
+  }
+
+  async function loadExistingJobsList() {
+    const list = document.getElementById('sj-existing-list');
+    list.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text3);">Loading…</div>';
+    try {
+      const jobs = await window._loadProjects();
+      if (!jobs.length) { list.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text3);">No saved jobs yet. Create a new job first.</div>'; return; }
+      list.innerHTML = '';
+      jobs.forEach(job => {
+        const div = document.createElement('div');
+        div.className = 'sj-job-option';
+        div.id = 'sjopt-' + job.id;
+        const calcsCount = (job.calcs||[]).length;
+        div.innerHTML = `
+          <div>
+            <div class="sj-job-opt-name">📍 ${job.address||job.name}</div>
+            <div class="sj-job-opt-meta">${job.customer?'👤 '+job.customer+' · ':''} ${calcsCount} calculation${calcsCount!==1?'s':''} · ${(job.totalSF||0).toLocaleString()} SF</div>
+          </div>
+          <div class="sj-job-opt-check">✅</div>`;
+        div.onclick = () => {
+          document.querySelectorAll('.sj-job-option').forEach(o=>o.classList.remove('selected'));
+          div.classList.add('selected');
+          _sjSelectedJobId = job.id;
+        };
+        list.appendChild(div);
+      });
+    } catch(e) { list.innerHTML = '<div style="color:var(--text3);padding:12px;">Error loading jobs.</div>'; }
+  }
+
   function closeSaveJob() {
     document.getElementById('save-job-overlay').classList.add('hidden');
+    _sjMode = 'new'; _sjSelectedJobId = null;
+    // reset to new mode
+    setSJMode('new');
+    document.getElementById('sj-new-btn').classList.add('active');
+    document.getElementById('sj-existing-btn').classList.remove('active');
+    document.getElementById('sj-new-fields').classList.remove('hidden');
+    document.getElementById('sj-existing-fields').classList.add('hidden');
   }
 
   async function confirmSaveJob() {
-    const address  = document.getElementById('sj-address').value.trim();
-    const customer = document.getElementById('sj-customer').value.trim();
-    const phone    = document.getElementById('sj-phone').value.trim();
-    const notes    = document.getElementById('sj-notes').value.trim();
-    if (!address) return alert('Please enter a job address.');
-
-    const areas = [];
-    let total = 0;
-    document.querySelectorAll('.area-row').forEach(row => {
-      const id = row.id.replace('area-row-', '');
-      const nm = row.querySelector('.area-name-input').value || ('Area ' + id);
-      const w  = parseFloat(document.getElementById('area-w-' + id)?.value) || 0;
-      const h  = parseFloat(document.getElementById('area-h-' + id)?.value) || 0;
-      if (w && h) { areas.push({ name: nm, w, h, sf: w * h }); total += w * h; }
-    });
-
-    const price = document.getElementById('meas-price').value || '';
-    const extra = document.getElementById('meas-extra').value || '';
-
     const btn = document.getElementById('sj-save-btn');
     btn.textContent = '⏳ Saving...'; btn.disabled = true;
 
+    // Build calculation object from current calculator
+    const calc = {
+      source:  _saveJobSource,
+      summary: document.getElementById('sj-summary').textContent,
+      savedAt: new Date().toISOString()
+    };
+
+    // Add areas if from measurements
+    if (_saveJobSource === 'measurements') {
+      const areas = []; let total = 0;
+      document.querySelectorAll('.area-row').forEach(row => {
+        const id = row.id.replace('area-row-', '');
+        const nm = row.querySelector('.area-name-input').value || ('Area '+id);
+        const w  = parseFloat(document.getElementById('area-w-'+id)?.value)||0;
+        const h  = parseFloat(document.getElementById('area-h-'+id)?.value)||0;
+        if (w&&h) { areas.push({name:nm,w,h,sf:w*h}); total+=w*h; }
+      });
+      calc.areas   = areas;
+      calc.totalSF = total;
+      calc.price   = document.getElementById('meas-price').value||'';
+    }
+
     try {
-      await window._saveProject({ name: address, address, customer, phone, notes, areas, totalSF: total, price, extra, source: _saveJobSource, summary: document.getElementById('sj-summary').textContent });
+      if (_sjMode === 'existing') {
+        // Add to existing job
+        if (!_sjSelectedJobId) { btn.textContent='💾 Save Job'; btn.disabled=false; return alert('Please select a job first.'); }
+        await window._addCalcToJob(_sjSelectedJobId, calc);
+      } else {
+        // New job
+        const address  = document.getElementById('sj-address').value.trim();
+        const customer = document.getElementById('sj-customer').value.trim();
+        const phone    = document.getElementById('sj-phone').value.trim();
+        const notes    = document.getElementById('sj-notes').value.trim();
+        if (!address) { btn.textContent='💾 Save Job'; btn.disabled=false; return alert('Please enter a job address.'); }
+        // Save as new job with calcs array
+        await window._saveProject({
+          name: address, address, customer, phone, notes,
+          source: _saveJobSource,
+          calcs: [calc],
+          totalSF: calc.totalSF||0,
+          areas: calc.areas||[],
+          price: calc.price||'',
+          summary: calc.summary
+        });
+      }
+
       btn.textContent = '✅ Saved!';
       setTimeout(() => {
         btn.textContent = '💾 Save Job'; btn.disabled = false;
         closeSaveJob();
-        // clear fields
-        ['sj-address','sj-customer','sj-phone','sj-notes'].forEach(id => document.getElementById(id).value = '');
+        ['sj-address','sj-customer','sj-phone','sj-notes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
       }, 1500);
     } catch(e) {
       btn.textContent = '💾 Save Job'; btn.disabled = false;
@@ -2322,10 +2459,29 @@
   function renderJobCard(job, container) {
     const date   = job.createdAt?.toDate ? job.createdAt.toDate().toLocaleDateString() : '';
     const sfText = job.totalSF ? job.totalSF.toLocaleString('en-US',{maximumFractionDigits:0})+' SF' : '';
-    const icon   = {asphalt:'🛣',concrete:'🏗',sand:'🪨',curb:'🚧',measurements:'📐'}[job.source||'measurements']||'📋';
-    let areaLines = '';
-    if (job.areas?.length) areaLines = job.areas.map(a=>a.name+': '+a.w+'×'+a.h+'='+a.sf.toLocaleString()+' SF').join('\n');
-    else if (job.summary) areaLines = job.summary;
+    const icon   = '📋';
+    // Build calcs section — show all calculations saved to this job
+    const calcs = job.calcs || [];
+    const calcIcons = {asphalt:'🛣',concrete:'🏗',sand:'🪨',curb:'🚧',measurements:'📐'};
+    let calcsHTML = '';
+    if (calcs.length) {
+      calcsHTML = calcs.map((c,i) => {
+        const ci = calcIcons[c.source||'measurements']||'📋';
+        const dt = c.savedAt ? new Date(c.savedAt).toLocaleDateString() : '';
+        const alines = c.areas?.map(a=>a.name+': '+a.w+'×'+a.h+'='+a.sf.toLocaleString()+' SF').join('<br>')||'';
+        return `<div class="calc-entry">
+          <div class="calc-entry-header">${ci} <b>${(c.source||'').charAt(0).toUpperCase()+(c.source||'').slice(1)||'Calculation'}</b> <span style="font-size:10px;color:var(--text3);float:right;">${dt}</span></div>
+          ${alines ? `<div class="job-areas-list">${alines}</div>` : (c.summary ? `<div class="job-areas-list">${c.summary.replace(/\n/g,'<br>')}</div>` : '')}
+        </div>`;
+      }).join('');
+    } else {
+      // legacy job without calcs array
+      let areaLines = '';
+      if (job.areas?.length) areaLines = job.areas.map(a=>a.name+': '+a.w+'×'+a.h+'='+a.sf.toLocaleString()+' SF').join('<br>');
+      else if (job.summary) areaLines = job.summary.replace(/\n/g,'<br>');
+      if (areaLines) calcsHTML = `<div class="calc-entry"><div class="job-areas-list">${areaLines}</div></div>`;
+    }
+    let areaLines = ''; // keep for email compat
     const card = document.createElement('div');
     card.className = 'job-card'; card.id = 'jcard-'+job.id;
     card.innerHTML = `
@@ -2345,7 +2501,7 @@
         ${job.phone   ?`<div class="job-detail-row"><span class="jk">Phone</span><span class="jv">${job.phone}</span></div>`:''}
         ${sfText      ?`<div class="job-detail-row"><span class="jk">Total SF</span><span class="jv">${sfText}</span></div>`:''}
         ${job.price   ?`<div class="job-detail-row"><span class="jk">Price/SF</span><span class="jv">$${job.price}</span></div>`:''}
-        ${areaLines   ?`<div class="job-areas-list">${areaLines.replace(/\n/g,'<br>')}</div>`:''}
+        ${calcsHTML ? `<div style="margin:4px 0 8px;">${calcsHTML}</div>` : ''}
         <div style="margin:8px 0 4px;">
           <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:4px;">📝 Notes</div>
           <textarea class="job-note-editor" id="jnote-${job.id}" placeholder="Add or edit notes…">${job.notes||''}</textarea>
