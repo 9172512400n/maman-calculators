@@ -179,7 +179,7 @@
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
-<body>
+<body style="visibility:hidden">
 
 <div class="auth-hero">
   <img class="auth-logo" src="maman-logo.jpg" alt="Maman" />
@@ -298,17 +298,21 @@
   window._auth = auth;
   window._firebase = { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence, GoogleAuthProvider, signInWithPopup };
 
-  // If already logged in → go straight to calculator
+  // If already logged in → go straight to calculator, else show the page
   auth.onAuthStateChanged(user => {
     if (user) {
       window.location.replace('index.html');
+    } else {
+      document.body.style.visibility = 'visible';
     }
   });
 
-  // Fallback: if auth state never fires (network/iOS issue), check after 3s
+  // Fallback: show page after 3s in case onAuthStateChanged never fires
   setTimeout(() => {
     if (auth.currentUser) {
       window.location.replace('index.html');
+    } else {
+      document.body.style.visibility = 'visible';
     }
   }, 3000);
 </script>
