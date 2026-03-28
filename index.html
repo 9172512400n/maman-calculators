@@ -1644,15 +1644,21 @@
 
 <!-- ─── SAVE JOB SHEET ─── -->
 <div class="picker-overlay hidden" id="save-job-overlay" onclick="closeSaveJob()">
-  <div class="picker-sheet" onclick="event.stopPropagation()" style="max-height:92vh;overflow-y:auto;">
-    <div class="picker-handle"></div>
-    <div class="picker-title">💾 Save Job</div>
+  <div class="picker-sheet" onclick="event.stopPropagation()" style="max-height:88vh;display:flex;flex-direction:column;overflow:hidden;">
 
-    <!-- New / Add to Existing toggle -->
-    <div class="sj-mode-row">
+    <!-- Sticky top — never scrolls away -->
+    <div style="flex-shrink:0;">
+      <div class="picker-handle"></div>
+      <div class="picker-title">💾 Save Job</div>
+      <!-- New / Add to Existing toggle -->
+      <div class="sj-mode-row">
       <button class="sj-mode-btn active" id="sj-new-btn" onclick="setSJMode('new')">➕ New Job</button>
       <button class="sj-mode-btn" id="sj-existing-btn" onclick="setSJMode('existing')">📂 Add to Existing</button>
     </div>
+    </div><!-- end sticky top -->
+
+    <!-- SCROLLABLE BODY -->
+    <div style="flex:1;overflow-y:auto;padding:0 20px 20px;">
 
     <!-- NEW JOB fields -->
     <div id="sj-new-fields">
@@ -1685,23 +1691,24 @@
     <div id="sj-existing-fields" class="hidden">
       <div class="save-job-field">
         <div class="save-job-label">Select a saved job to add to</div>
-        <!-- search inside existing list -->
         <div class="jobs-search-wrap" style="margin-bottom:10px;">
           <span class="jobs-search-icon">🔍</span>
           <input class="jobs-search-input" type="text" id="sj-existing-search" placeholder="Search jobs…" oninput="filterExistingList(this.value)" />
         </div>
-        <div id="sj-existing-list" style="max-height:45vh;overflow-y:auto;padding-bottom:4px;">
+        <div id="sj-existing-list">
           <div style="text-align:center;padding:16px;color:var(--text3);">Loading jobs…</div>
         </div>
       </div>
     </div>
 
-    <!-- Calculation summary (always shown) -->
+    <!-- Calculation summary -->
     <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">📊 Calculation to Save</div>
     <div class="save-job-summary" id="sj-summary"></div>
 
     <button class="proj-save-btn-full" id="sj-save-btn" onclick="confirmSaveJob()" style="margin-top:16px;">💾 Save Job</button>
     <button class="picker-cancel" onclick="closeSaveJob()">Cancel</button>
+
+    </div><!-- end scrollable body -->
   </div>
 </div>
 
