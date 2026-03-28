@@ -29,7 +29,10 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    window._signOut = () => signOut(auth).then(() => window.location.href = 'auth.html');
+    window._signOut = async () => {
+      try { await signOut(auth); } catch(e) {}
+      window.location.replace('auth.html');
+    };
     window._db = db;
 
     onAuthStateChanged(auth, user => {
