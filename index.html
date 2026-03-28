@@ -1257,7 +1257,11 @@
 <div class="page" id="page-meas">
 
   <!-- Saved projects button at top -->
-  <button class="proj-list-btn" onclick="openProjects()">📂 My Saved Jobs</button>
+  <!-- Top row: New Job + Saved Jobs -->
+  <div style="display:flex;gap:10px;margin-bottom:12px;">
+    <button class="proj-save-btn-full" onclick="openSaveJob()" style="flex:2;margin-bottom:0;">💾 Save Job</button>
+    <button class="proj-list-btn" onclick="openProjects()" style="flex:1;margin-bottom:0;text-align:center;">📂 Saved</button>
+  </div>
 
   <div class="meas-section-lbl">Areas / Rooms</div>
   <div id="meas-rows"></div>
@@ -1287,7 +1291,6 @@
     <button class="abtn abtn-text"  onclick="measText()">📱 Text</button>
     <button class="abtn abtn-email" onclick="measEmail()">📧 Email</button>
   </div>
-  <button class="proj-save-btn-full" onclick="openSaveJob()">💾 Save Job</button>
 </div>
 
 <!-- ─── SAVE JOB SHEET ─── -->
