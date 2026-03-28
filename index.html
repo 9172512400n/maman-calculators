@@ -614,7 +614,7 @@
     }
     .job-action-btn:active { opacity: 0.75; }
     .jab-load  { background: var(--card2); color: var(--text2); border: 1px solid var(--border); }
-    .jab-call  { background: #1a4a1a; color: #4caf50; }
+    .jab-call  { background: #1a4a1a; color: #4caf50; font-size: 12px; letter-spacing: 0.3px; }
     .jab-share { background: #1a1a4a; color: #7b9fd5; }
     .abtn-share { background: #1a1a4a; color: #7b9fd5; }
     .meas-btn-share { background: #1a1a4a; color: #7b9fd5; }
@@ -2735,7 +2735,8 @@
         ${job.notes?`<div style="background:var(--card2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text2);margin-bottom:10px;">📝 ${job.notes}</div>`:''}
         <div class="job-actions">
           ${job.areas?.length?`<button class="job-action-btn jab-load" onclick="loadJobToMeas('${job.id}')">📐 Load</button>`:''}
-          ${job.phone?`<button class="job-action-btn jab-call" onclick="window.location.href='tel:${job.phone.replace(/\D/g,'')}'">📞 Call</button>`:''}
+          ${job.phone?`<button class="job-action-btn jab-call" onclick="window.location.href='tel:${job.phone.replace(/\D/g,'')}'" >📞 ${job.phone}</button>`:''}
+          ${job.phone2?`<button class="job-action-btn jab-call" onclick="window.location.href='tel:${job.phone2.replace(/\D/g,'')}'" >📞 ${job.phone2}</button>`:''}
           <button class="job-action-btn jab-share" onclick='shareJob("${job.id}")'>↗ Share</button>
           <button class="job-action-btn" style="background:#1a4a8a;color:#5b9bd5;" onclick='openEditJob("${job.id}")'>✏️ Edit</button>
           <button class="job-action-btn jab-del" onclick="deleteJobCard('${job.id}')">🗑 Del</button>
