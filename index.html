@@ -1703,7 +1703,7 @@
 
     <!-- Calculation summary -->
     <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">📊 Calculation to Save</div>
-    <div class="save-job-summary" id="sj-summary"></div>
+    <div class="save-job-summary" id="sj-summary" style="white-space:pre-line;line-height:1.8;"></div>
 
     <button class="proj-save-btn-full" id="sj-save-btn" onclick="confirmSaveJob()" style="margin-top:16px;">💾 Save Job</button>
     <button class="picker-cancel" onclick="closeSaveJob()">Cancel</button>
@@ -2480,25 +2480,29 @@
 
   function openSaveJobFrom(source) {
     _saveJobSource = source;
-    // Build a summary from the current calculator
-    let summary = '';
+    const icons = {asphalt:'🛣',sand:'🪨',curb:'🚧',concrete:'🏗',measurements:'📐'};
+    const icon = icons[source]||'📋';
+    let lines = [];
+
     if (source === 'asphalt') {
       const sf = _aspMode==='sf' ? n('asp-quick-sf') : n('asp-width')*n('asp-length');
-      summary = 'Asphalt\nSF: '+sf+' ft²\nYards: '+document.getElementById('asp-r-yards').textContent+'\nTons: '+document.getElementById('asp-r-tons').textContent+'\nCost: '+document.getElementById('asp-r-cost').textContent;
+      lines = [icon+' Asphalt','✅ Total SF: '+sf.toLocaleString()+' ft²','📦 Yards: '+document.getElementById('asp-r-yards').textContent,'⚖️ Tons: '+document.getElementById('asp-r-tons').textContent,'💵 Cost: '+document.getElementById('asp-r-cost').textContent];
     } else if (source === 'sand') {
-      const sf = _sndMode==='sf' ? n('snd-quick-sf') : n('snd-width')*n('snd-length');
+      const sf  = _sndMode==='sf' ? n('snd-quick-sf') : n('snd-width')*n('snd-length');
       const mat = document.getElementById(_sndMode==='sf'?'snd-sf-material':'snd-material').options[document.getElementById(_sndMode==='sf'?'snd-sf-material':'snd-material').selectedIndex].text;
-      summary = 'Sand & Gravel\nMaterial: '+mat+'\nSF: '+sf+' ft²\nTons: '+document.getElementById('snd-r-tons').textContent+'\nYards: '+document.getElementById('snd-r-yards').textContent+'\nCost: '+document.getElementById('snd-r-cost').textContent;
+      lines = [icon+' Sand & Gravel','🪨 Material: '+mat,'✅ Total SF: '+sf.toLocaleString()+' ft²','⚖️ Tons: '+document.getElementById('snd-r-tons').textContent,'📦 Yards: '+document.getElementById('snd-r-yards').textContent,'💵 Cost: '+document.getElementById('snd-r-cost').textContent];
     } else if (source === 'curb') {
-      const lf = _curbMode==='sf' ? n('curb-quick-lf') : n('curb-length');
-      summary = 'Curb & Gutter\nLinear ft: '+lf+'\nYards: '+(document.getElementById(_curbMode==='sf'?'curb-q-r-yards':'curb-r-yards').textContent)+'\nCost: '+(document.getElementById(_curbMode==='sf'?'curb-q-r-cost':'curb-r-cost').textContent);
+      const lf  = _curbMode==='sf' ? n('curb-quick-lf') : n('curb-length');
+      const yds = document.getElementById(_curbMode==='sf'?'curb-q-r-yards':'curb-r-yards').textContent;
+      const cost= document.getElementById(_curbMode==='sf'?'curb-q-r-cost':'curb-r-cost').textContent;
+      lines = [icon+' Curb & Gutter','✅ Linear Feet: '+lf+' ft','📦 Yards: '+yds,'💵 Cost: '+cost];
     } else if (source === 'concrete') {
-      summary = (conSubTitles[conSubType]||'Concrete')+'\n'+document.getElementById('con2-headline').textContent+'\n'+document.getElementById('con2-advisory').textContent;
+      lines = [icon+' '+(conSubTitles[conSubType]||'Concrete'),document.getElementById('con2-headline').textContent,document.getElementById('con2-advisory').textContent];
     } else {
-      // measurements — use existing openSaveJob
       openSaveJob(); return;
     }
-    document.getElementById('sj-summary').textContent = summary;
+
+    document.getElementById('sj-summary').textContent = lines.filter(Boolean).join('\n');
     document.getElementById('save-job-overlay').classList.remove('hidden');
   }
 
@@ -2517,10 +2521,10 @@
 
     const price = document.getElementById('meas-price').value;
     const est   = document.getElementById('meas-est-total').textContent;
-    let summary = lines + '\nTotal SF: ' + total.toLocaleString('en-US',{maximumFractionDigits:0}) + ' SF';
-    if (price) summary += '\nPrice per SF: $' + price;
-    if (est !== '—') summary += '\nEstimated Total: ' + est;
-    document.getElementById('sj-summary').textContent = summary;
+    let summaryLines = ['📐 Measurements', lines.trim(),'','✅ Total SF: ' + total.toLocaleString('en-US',{maximumFractionDigits:0}) + ' ft²'];
+    if (price) summaryLines.push('💰 Price/SF: $' + price);
+    if (est !== '—') summaryLines.push('💵 Estimated Total: ' + est);
+    document.getElementById('sj-summary').textContent = summaryLines.join('\n');
     document.getElementById('save-job-overlay').classList.remove('hidden');
   }
 
