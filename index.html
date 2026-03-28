@@ -44,7 +44,7 @@
         const el = document.getElementById('user-name');
         if (el) el.textContent = name;
         // Show app once auth confirmed
-        document.body.style.visibility = 'visible';
+        document.body.style.opacity = '1';
       }
     });
 
@@ -931,7 +931,7 @@
     .hidden { display: none !important; }
   </style>
 </head>
-<body style="visibility:hidden">
+<body style="opacity:0;transition:opacity 0.2s ease">
 
 <!-- ─── TOP BAR ─── -->
 <div class="top-bar">

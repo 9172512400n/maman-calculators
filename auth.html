@@ -179,7 +179,7 @@
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
-<body style="visibility:hidden">
+<body style="opacity:0;transition:opacity 0.2s ease">
 
 <div class="auth-hero">
   <img class="auth-logo" src="maman-logo.jpg" alt="Maman" />
@@ -303,7 +303,7 @@
     if (user) {
       window.location.replace('index.html');
     } else {
-      document.body.style.visibility = 'visible';
+      document.body.style.opacity = '1';
     }
   });
 
@@ -312,7 +312,7 @@
     if (auth.currentUser) {
       window.location.replace('index.html');
     } else {
-      document.body.style.visibility = 'visible';
+      document.body.style.opacity = '1';
     }
   }, 3000);
 </script>
