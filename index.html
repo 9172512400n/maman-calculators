@@ -446,6 +446,73 @@
     .curb-diagram svg { display: block; width: 100%; height: auto; }
 
     /* ══════════════════ MEASUREMENTS ══════════════════ */
+    /* Save Job button on each calculator tab */
+    .save-job-tab-btn {
+      display: block; width: 100%;
+      background: #1565c0; color: #fff;
+      border: none; border-radius: 14px;
+      padding: 16px; font-size: 16px; font-weight: 800;
+      cursor: pointer; font-family: inherit;
+      margin-bottom: 12px; transition: opacity 0.15s;
+    }
+    .save-job-tab-btn:active { opacity: 0.8; }
+
+    /* Jobs page */
+    .jobs-header {
+      padding: 16px 16px 8px;
+    }
+    .jobs-title { font-size: 22px; font-weight: 900; color: var(--text); margin-bottom: 4px; }
+    .jobs-sub   { font-size: 13px; color: var(--text3); margin-bottom: 12px; }
+
+    .job-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px; margin: 0 16px 12px;
+      overflow: hidden; transition: background 0.2s;
+    }
+    .job-card-header {
+      display: flex; align-items: flex-start;
+      padding: 14px 16px; gap: 12px; cursor: pointer;
+    }
+    .job-card-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+    .job-card-body { flex: 1; }
+    .job-card-address { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+    .job-card-customer { font-size: 13px; color: var(--text2); font-weight: 600; }
+    .job-card-sf { font-size: 15px; font-weight: 900; color: var(--green); text-align: right; }
+    .job-card-date { font-size: 11px; color: var(--text3); text-align: right; margin-top: 2px; }
+
+    .job-card-details {
+      border-top: 1px solid var(--border);
+      padding: 12px 16px; display: none;
+    }
+    .job-card-details.open { display: block; }
+    .job-detail-row {
+      display: flex; justify-content: space-between;
+      padding: 5px 0; font-size: 13px;
+      border-bottom: 1px solid var(--border2);
+    }
+    .job-detail-row:last-child { border: none; }
+    .job-detail-row .jk { color: var(--text3); font-weight: 600; }
+    .job-detail-row .jv { color: var(--text); font-weight: 700; }
+    .job-areas-list { font-size: 12px; color: var(--text2); line-height: 1.8; margin: 8px 0; }
+
+    .job-actions {
+      display: flex; gap: 8px; padding: 10px 16px 14px;
+      border-top: 1px solid var(--border);
+    }
+    .job-action-btn {
+      flex: 1; padding: 10px 6px;
+      border-radius: 10px; border: none;
+      font-size: 13px; font-weight: 800;
+      cursor: pointer; font-family: inherit; text-align: center;
+      transition: opacity 0.15s;
+    }
+    .job-action-btn:active { opacity: 0.75; }
+    .jab-load  { background: var(--card2); color: var(--text2); border: 1px solid var(--border); }
+    .jab-call  { background: #1a4a1a; color: #4caf50; }
+    .jab-email { background: #08143a; color: #5b9bd5; }
+    .jab-del   { background: #3a0808; color: #ff6b6b; }
+
     /* Full width save job button */
     .proj-save-btn-full {
       display: block; width: 100%;
@@ -727,6 +794,7 @@
     <button class="pill-tab" onclick="switchTab('sand',this)">Sand &amp; Gravel</button>
     <button class="pill-tab" onclick="switchTab('curb',this)">Curb &amp; Gutter</button>
     <button class="pill-tab" onclick="switchTab('meas',this)">Measurements</button>
+    <button class="pill-tab" onclick="switchTab('jobs',this)">📋 Jobs</button>
   </div>
 </div>
 
@@ -796,6 +864,7 @@
     <button class="abtn abtn-email" onclick="emailAsphalt()">📧 Email</button>
   </div>
 
+  <button class="save-job-tab-btn" onclick="openSaveJobFrom('asphalt')">💾 Save Job</button>
   <div class="note"><strong>NOTE:</strong> Estimating tool only. Add 5–10% for waste. Hot mix density: 145 lb/ft³.</div>
 </div>
 
@@ -1007,6 +1076,7 @@
       </div>
     </div>
 
+    <button class="save-job-tab-btn" onclick="openSaveJobFrom('concrete')">💾 Save Job</button>
     <div class="note"><strong>NOTE:</strong> Always add 8–10% for waste. Cure minimum 7 days.</div>
   </div>
 </div>
@@ -1111,6 +1181,7 @@
     <button class="abtn abtn-email" onclick="emailSand()">📧 Email</button>
   </div>
 
+  <button class="save-job-tab-btn" onclick="openSaveJobFrom('sand')">💾 Save Job</button>
   <div class="note"><strong>NOTE:</strong> Estimating tool only. Results vary with moisture content.</div>
 </div>
 
@@ -1247,6 +1318,7 @@
     <button class="abtn abtn-email" onclick="emailCurb()">📧 Email</button>
   </div>
 
+  <button class="save-job-tab-btn" onclick="openSaveJobFrom('curb')">💾 Save Job</button>
   <div class="note"><strong>NOTE:</strong> Cross-section = (Depth × Height) + (Gutter × Flag). Add 8% waste.</div>
   </div><!-- end curb-dims-panel -->
 </div>
@@ -1290,6 +1362,22 @@
     <button class="abtn abtn-clear" onclick="measClear()">Clear</button>
     <button class="abtn abtn-text"  onclick="measText()">📱 Text</button>
     <button class="abtn abtn-email" onclick="measEmail()">📧 Email</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     JOBS PAGE
+════════════════════════════════════ -->
+<div class="page" id="page-jobs">
+  <div class="jobs-header">
+    <div class="jobs-title">📋 My Jobs</div>
+    <div class="jobs-sub">All saved jobs across all calculators</div>
+  </div>
+  <div id="jobs-page-list"></div>
+  <div id="jobs-page-empty" style="text-align:center;padding:50px 20px;color:var(--text3);">
+    <div style="font-size:40px;margin-bottom:12px;">📂</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:8px;">No saved jobs yet</div>
+    <div style="font-size:13px;">Use the 💾 Save Job button on any calculator to save a job here.</div>
   </div>
 </div>
 
@@ -1425,6 +1513,7 @@
     // sync bottom nav
     const idx = tabOrder.indexOf(name);
     document.querySelectorAll('.bnav-btn').forEach((b,i) => b.classList.toggle('active', i === idx));
+    if (name === 'jobs') loadJobsPage();
     window.scrollTo(0, 0);
   }
 
@@ -1950,6 +2039,33 @@
     window.scrollTo(0,0);
   }
 
+  // ── SAVE JOB FROM ANY CALCULATOR ──
+  let _saveJobSource = 'measurements';
+
+  function openSaveJobFrom(source) {
+    _saveJobSource = source;
+    // Build a summary from the current calculator
+    let summary = '';
+    if (source === 'asphalt') {
+      const sf = _aspMode==='sf' ? n('asp-quick-sf') : n('asp-width')*n('asp-length');
+      summary = 'Asphalt\nSF: '+sf+' ft²\nYards: '+document.getElementById('asp-r-yards').textContent+'\nTons: '+document.getElementById('asp-r-tons').textContent+'\nCost: '+document.getElementById('asp-r-cost').textContent;
+    } else if (source === 'sand') {
+      const sf = _sndMode==='sf' ? n('snd-quick-sf') : n('snd-width')*n('snd-length');
+      const mat = document.getElementById(_sndMode==='sf'?'snd-sf-material':'snd-material').options[document.getElementById(_sndMode==='sf'?'snd-sf-material':'snd-material').selectedIndex].text;
+      summary = 'Sand & Gravel\nMaterial: '+mat+'\nSF: '+sf+' ft²\nTons: '+document.getElementById('snd-r-tons').textContent+'\nYards: '+document.getElementById('snd-r-yards').textContent+'\nCost: '+document.getElementById('snd-r-cost').textContent;
+    } else if (source === 'curb') {
+      const lf = _curbMode==='sf' ? n('curb-quick-lf') : n('curb-length');
+      summary = 'Curb & Gutter\nLinear ft: '+lf+'\nYards: '+(document.getElementById(_curbMode==='sf'?'curb-q-r-yards':'curb-r-yards').textContent)+'\nCost: '+(document.getElementById(_curbMode==='sf'?'curb-q-r-cost':'curb-r-cost').textContent);
+    } else if (source === 'concrete') {
+      summary = (conSubTitles[conSubType]||'Concrete')+'\n'+document.getElementById('con2-headline').textContent+'\n'+document.getElementById('con2-advisory').textContent;
+    } else {
+      // measurements — use existing openSaveJob
+      openSaveJob(); return;
+    }
+    document.getElementById('sj-summary').textContent = summary;
+    document.getElementById('save-job-overlay').classList.remove('hidden');
+  }
+
   // ── SAVE JOB SHEET ──
   function openSaveJob() {
     // collect areas for preview
@@ -2000,7 +2116,7 @@
     btn.textContent = '⏳ Saving...'; btn.disabled = true;
 
     try {
-      await window._saveProject({ name: address, address, customer, phone, notes, areas, totalSF: total, price, extra });
+      await window._saveProject({ name: address, address, customer, phone, notes, areas, totalSF: total, price, extra, source: _saveJobSource, summary: document.getElementById('sj-summary').textContent });
       btn.textContent = '✅ Saved!';
       setTimeout(() => {
         btn.textContent = '💾 Save Job'; btn.disabled = false;
@@ -2012,6 +2128,86 @@
       btn.textContent = '💾 Save Job'; btn.disabled = false;
       alert('Error saving. Please try again.');
     }
+  }
+
+  // ── JOBS PAGE ──
+  async function loadJobsPage() {
+    const list  = document.getElementById('jobs-page-list');
+    const empty = document.getElementById('jobs-page-empty');
+    list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);">Loading...</div>';
+    empty.style.display = 'none';
+    try {
+      const jobs = await window._loadProjects();
+      list.innerHTML = '';
+      if (!jobs.length) { empty.style.display = 'block'; return; }
+      jobs.forEach(job => renderJobCard(job, list));
+    } catch(e) {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">Error loading jobs.</div>';
+    }
+  }
+
+  function renderJobCard(job, container) {
+    const date   = job.createdAt?.toDate ? job.createdAt.toDate().toLocaleDateString() : '';
+    const sfText = job.totalSF ? job.totalSF.toLocaleString('en-US',{maximumFractionDigits:0})+' SF' : '';
+    const icon   = {asphalt:'🛣',concrete:'🏗',sand:'🪨',curb:'🚧',measurements:'📐'}[job.source||'measurements']||'📋';
+    let areaLines = '';
+    if (job.areas?.length) areaLines = job.areas.map(a=>a.name+': '+a.w+'×'+a.h+'='+a.sf.toLocaleString()+' SF').join('\n');
+    else if (job.summary) areaLines = job.summary;
+    const card = document.createElement('div');
+    card.className = 'job-card'; card.id = 'jcard-'+job.id;
+    card.innerHTML = `
+      <div class="job-card-header" onclick="toggleJobCard('${job.id}')">
+        <div class="job-card-icon">${icon}</div>
+        <div class="job-card-body">
+          <div class="job-card-address">${job.address||job.name}</div>
+          <div class="job-card-customer">${job.customer?'👤 '+job.customer:''}${job.phone?' · 📞 '+job.phone:''}</div>
+        </div>
+        <div>
+          <div class="job-card-sf">${sfText}</div>
+          <div class="job-card-date">${date}</div>
+        </div>
+      </div>
+      <div class="job-card-details" id="jdetails-${job.id}">
+        ${job.customer?`<div class="job-detail-row"><span class="jk">Customer</span><span class="jv">${job.customer}</span></div>`:''}
+        ${job.phone   ?`<div class="job-detail-row"><span class="jk">Phone</span><span class="jv">${job.phone}</span></div>`:''}
+        ${sfText      ?`<div class="job-detail-row"><span class="jk">Total SF</span><span class="jv">${sfText}</span></div>`:''}
+        ${job.price   ?`<div class="job-detail-row"><span class="jk">Price/SF</span><span class="jv">$${job.price}</span></div>`:''}
+        ${job.notes   ?`<div class="job-detail-row"><span class="jk">Notes</span><span class="jv">${job.notes}</span></div>`:''}
+        ${areaLines   ?`<div class="job-areas-list">${areaLines.replace(/\n/g,'<br>')}</div>`:''}
+        <div class="job-actions">
+          ${job.areas?.length?`<button class="job-action-btn jab-load" onclick="loadJobToMeas('${job.id}')">📐 Load</button>`:''}
+          ${job.phone?`<button class="job-action-btn jab-call" onclick="window.location.href='tel:${job.phone.replace(/\D/g,'')}'">📞 Call</button>`:''}
+          <button class="job-action-btn jab-email" onclick='emailJobSummary(${JSON.stringify(job)})'>📧 Email</button>
+          <button class="job-action-btn jab-del" onclick="deleteJobCard('${job.id}')">🗑 Del</button>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  }
+
+  function toggleJobCard(id) { document.getElementById('jdetails-'+id).classList.toggle('open'); }
+
+  async function deleteJobCard(id) {
+    if (!confirm('Delete this job?')) return;
+    try {
+      await window._deleteProject(id);
+      const c = document.getElementById('jcard-'+id); if(c) c.remove();
+      if (!document.getElementById('jobs-page-list').children.length) document.getElementById('jobs-page-empty').style.display='block';
+    } catch(e) { alert('Error deleting.'); }
+  }
+
+  function loadJobToMeas(id) {
+    window._loadProjects().then(jobs => {
+      const job = jobs.find(j=>j.id===id);
+      if (!job) return;
+      switchTab('meas', document.querySelector('.pill-tab:nth-child(5)'));
+      loadProject(job);
+    });
+  }
+
+  function emailJobSummary(job) {
+    const lines = (job.areas||[]).map(a=>a.name+': '+a.w+'×'+a.h+'='+a.sf.toLocaleString()+' SF').join('\n')||job.summary||'';
+    const body  = '📋 JOB SUMMARY\n══════════════════════\n📍 '+(job.address||job.name)+'\n'+(job.customer?'👤 '+job.customer+'\n':'')+(job.phone?'📞 '+job.phone+'\n':'')+(job.notes?'📝 '+job.notes+'\n':'')+'\n'+(lines?'AREAS:\n'+lines+'\n\n':'')+(job.totalSF?'Total SF: '+job.totalSF.toLocaleString()+' SF\n':'')+(job.price?'Price/SF: $'+job.price+'\n':'')+getSignature();
+    window.location.href='mailto:?subject=Job: '+encodeURIComponent(job.address||job.name)+'&body='+encodeURIComponent(body);
   }
 
   async function openProjects() {
