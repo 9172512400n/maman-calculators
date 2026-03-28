@@ -564,7 +564,6 @@
     <span class="brand-name">Maman Calculators</span>
   </div>
   <div class="top-right">
-    <button class="share-btn" onclick="shareApp()">↗ Share</button>
     <button class="day-night-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
     <button class="user-btn" onclick="showUserMenu()" id="user-avatar">👤</button>
   </div>
@@ -589,9 +588,12 @@
 
     <!-- Signature toggle -->
     <div style="margin-bottom:14px;">
-      <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">Email / Text Signature</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <span style="font-size:14px;font-weight:600;color:var(--text2);">Add signature</span>
+      <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">✍️ Email / Text Signature</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);">Add signature</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">Appended to all emails &amp; texts</div>
+        </div>
         <div class="toggle-switch" id="sig-toggle" onclick="toggleSignature()">
           <div class="toggle-knob"></div>
         </div>
