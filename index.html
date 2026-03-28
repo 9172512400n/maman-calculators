@@ -571,6 +571,7 @@
       position: relative; margin: 0 16px 12px;
       overflow: hidden; border-radius: 16px;
       border: 1px solid var(--border);
+      display: flex; align-items: stretch;
     }
     .job-card-wrap .job-delete-reveal {
       position: absolute; right: 0; top: 0; bottom: 0;
@@ -589,9 +590,10 @@
     }
     .job-card {
       background: var(--card);
-      border-radius: 16px;
+      border-radius: 0;
       overflow: hidden; transition: transform 0.25s ease, background 0.2s;
       position: relative; z-index: 1;
+      width: 100%; flex-shrink: 0;
     }
     .job-card.swiped { transform: translateX(-90px); }
     .job-card-header {
