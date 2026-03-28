@@ -1609,27 +1609,31 @@
     measAddRow();measAddRow();measAddRow();
   }
   function _measBody(){
+    // recalculate fresh before building message
     let lines='';
+    let total=0;
     document.querySelectorAll('.area-row').forEach(row=>{
       const id=row.id.replace('area-row-','');
       const nm=row.querySelector('.area-name-input').value||('Area '+id);
-      const w=document.getElementById('area-w-'+id)?.value||'';
-      const h=document.getElementById('area-h-'+id)?.value||'';
-      const sf=document.getElementById('area-sf-'+id)?.textContent||'—';
-      if(w&&h) lines+=nm+': '+w+' × '+h+' = '+sf+'\n';
+      const w=parseFloat(document.getElementById('area-w-'+id)?.value)||0;
+      const h=parseFloat(document.getElementById('area-h-'+id)?.value)||0;
+      if(w&&h){
+        const sf=w*h;
+        total+=sf;
+        lines+=nm+': '+w+' × '+h+' = '+sf.toLocaleString('en-US',{maximumFractionDigits:1})+' SF\n';
+      }
     });
-    const totalSF  = document.getElementById('meas-total-sf').textContent;
-    const wasteSF  = document.getElementById('meas-waste-sf').textContent;
-    const estTotal = document.getElementById('meas-est-total').textContent;
-    const price    = document.getElementById('meas-price').value;
-    const extra    = document.getElementById('meas-extra').value;
+    const waste    = total * 1.10;
+    const price    = parseFloat(document.getElementById('meas-price').value)||0;
+    const extra    = parseFloat(document.getElementById('meas-extra').value)||0;
+    const estTotal = (price>0&&total>0) ? '$'+(total*price+extra).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—';
 
     let msg = '📐 MEASUREMENTS ESTIMATE\n';
     msg += '══════════════════════\n\n';
     if(lines) msg += 'AREAS:\n' + lines + '\n';
     msg += '══════════════════════\n';
-    msg += '✅ TOTAL SF: ' + totalSF + '\n';
-    msg += '📦 +10% Waste: ' + wasteSF + '\n';
+    msg += '✅ TOTAL SF: ' + total.toLocaleString('en-US',{maximumFractionDigits:1}) + ' SF\n';
+    msg += '📦 +10% Waste: ' + waste.toLocaleString('en-US',{maximumFractionDigits:1}) + ' SF\n';
     if(price) msg += '💰 Price per SF: $' + price + '\n';
     if(extra) msg += '➕ Extra cost: $' + extra + '\n';
     msg += '💵 ESTIMATED TOTAL: ' + estTotal + '\n';
