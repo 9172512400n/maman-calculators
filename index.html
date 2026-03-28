@@ -171,6 +171,14 @@
     .brand img { width: 32px; height: 32px; border-radius: 8px; object-fit: contain; }
     .brand-name { font-size: 16px; font-weight: 800; color: var(--text); letter-spacing: 0.3px; }
     .top-right { display: flex; align-items: center; gap: 8px; }
+    .jobs-quick-btn {
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 20px;
+      padding: 6px 12px; font-size: 13px; font-weight: 800;
+      cursor: pointer; transition: opacity 0.15s;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .jobs-quick-btn:active { opacity: 0.75; }
     .user-btn {
       width: 32px; height: 32px;
       background: #e53935; border: none; border-radius: 50%;
@@ -871,6 +879,7 @@
     <span class="brand-name">Maman Calculators</span>
   </div>
   <div class="top-right">
+    <button class="jobs-quick-btn" onclick="switchTab('jobs', document.querySelector('.pill-tab:nth-child(6)'))">📋 Jobs</button>
     <button class="day-night-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
     <button class="user-btn" onclick="showUserMenu()" id="user-avatar">👤</button>
   </div>
