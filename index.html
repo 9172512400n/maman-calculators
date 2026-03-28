@@ -460,9 +460,44 @@
     /* Jobs page */
     .jobs-header {
       padding: 16px 16px 8px;
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg); transition: background 0.2s;
     }
-    .jobs-title { font-size: 22px; font-weight: 900; color: var(--text); margin-bottom: 4px; }
-    .jobs-sub   { font-size: 13px; color: var(--text3); margin-bottom: 12px; }
+    .jobs-title { font-size: 22px; font-weight: 900; color: var(--text); margin-bottom: 12px; }
+
+    /* Search bar */
+    .jobs-search-wrap {
+      display: flex; align-items: center;
+      background: var(--card); border: 1.5px solid var(--border);
+      border-radius: 14px; padding: 0 14px;
+      margin-bottom: 10px; gap: 8px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .jobs-search-wrap:focus-within { border-color: var(--accent); }
+    .jobs-search-icon { font-size: 16px; color: var(--text3); flex-shrink: 0; }
+    .jobs-search-input {
+      flex: 1; border: none; outline: none;
+      background: transparent; font-size: 15px; font-weight: 500;
+      color: var(--text); padding: 13px 0; font-family: inherit;
+    }
+    .jobs-search-input::placeholder { color: var(--text3); }
+    .jobs-search-clear {
+      background: none; border: none; color: var(--text3);
+      font-size: 14px; cursor: pointer; padding: 4px; flex-shrink: 0;
+    }
+    .jobs-search-clear.hidden { display: none; }
+
+    /* Stats bar */
+    .jobs-stats {
+      display: flex; gap: 12px; margin-bottom: 8px;
+      font-size: 12px; color: var(--text3); font-weight: 700;
+      flex-wrap: wrap;
+    }
+    .jobs-stat-chip {
+      background: var(--card2); border-radius: 20px;
+      padding: 4px 12px; border: 1px solid var(--border);
+    }
+    .jobs-stat-chip span { color: var(--accent); font-weight: 900; }
 
     .job-card {
       background: var(--card);
@@ -1371,13 +1406,24 @@
 <div class="page" id="page-jobs">
   <div class="jobs-header">
     <div class="jobs-title">📋 My Jobs</div>
-    <div class="jobs-sub">All saved jobs across all calculators</div>
+    <!-- Search bar -->
+    <div class="jobs-search-wrap">
+      <span class="jobs-search-icon">🔍</span>
+      <input class="jobs-search-input" type="text" id="jobs-search" placeholder="Search by address, customer, phone…" oninput="filterJobs(this.value)" />
+      <button class="jobs-search-clear hidden" id="jobs-search-clear" onclick="clearJobSearch()">✕</button>
+    </div>
+    <!-- Stats bar -->
+    <div class="jobs-stats" id="jobs-stats"></div>
   </div>
   <div id="jobs-page-list"></div>
   <div id="jobs-page-empty" style="text-align:center;padding:50px 20px;color:var(--text3);">
     <div style="font-size:40px;margin-bottom:12px;">📂</div>
     <div style="font-size:16px;font-weight:700;margin-bottom:8px;">No saved jobs yet</div>
     <div style="font-size:13px;">Use the 💾 Save Job button on any calculator to save a job here.</div>
+  </div>
+  <div id="jobs-no-results" style="text-align:center;padding:30px 20px;color:var(--text3);display:none;">
+    <div style="font-size:30px;margin-bottom:8px;">🔍</div>
+    <div style="font-size:15px;font-weight:700;">No results found</div>
   </div>
 </div>
 
@@ -2131,19 +2177,64 @@
   }
 
   // ── JOBS PAGE ──
+  let _allJobs = [];
+
   async function loadJobsPage() {
     const list  = document.getElementById('jobs-page-list');
     const empty = document.getElementById('jobs-page-empty');
+    const noRes = document.getElementById('jobs-no-results');
     list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);">Loading...</div>';
     empty.style.display = 'none';
+    noRes.style.display = 'none';
+    document.getElementById('jobs-search').value = '';
+    document.getElementById('jobs-search-clear').classList.add('hidden');
     try {
-      const jobs = await window._loadProjects();
-      list.innerHTML = '';
-      if (!jobs.length) { empty.style.display = 'block'; return; }
-      jobs.forEach(job => renderJobCard(job, list));
+      _allJobs = await window._loadProjects();
+      renderJobsList(_allJobs);
     } catch(e) {
       list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);">Error loading jobs.</div>';
     }
+  }
+
+  function renderJobsList(jobs) {
+    const list  = document.getElementById('jobs-page-list');
+    const empty = document.getElementById('jobs-page-empty');
+    const noRes = document.getElementById('jobs-no-results');
+    list.innerHTML = '';
+    empty.style.display = 'none';
+    noRes.style.display = 'none';
+
+    if (!_allJobs.length) { empty.style.display = 'block'; return; }
+    if (!jobs.length)     { noRes.style.display = 'block'; return; }
+
+    jobs.forEach(job => renderJobCard(job, list));
+
+    // Stats
+    const totalSF = jobs.reduce((s,j)=>s+(j.totalSF||0),0);
+    const stats = document.getElementById('jobs-stats');
+    stats.innerHTML = `
+      <div class="jobs-stat-chip"><span>${jobs.length}</span> jobs</div>
+      <div class="jobs-stat-chip"><span>${totalSF.toLocaleString('en-US',{maximumFractionDigits:0})}</span> total SF</div>
+    `;
+  }
+
+  function filterJobs(query) {
+    const q = query.trim().toLowerCase();
+    document.getElementById('jobs-search-clear').classList.toggle('hidden', !q);
+    if (!q) { renderJobsList(_allJobs); return; }
+    const filtered = _allJobs.filter(j =>
+      (j.address||j.name||'').toLowerCase().includes(q) ||
+      (j.customer||'').toLowerCase().includes(q) ||
+      (j.phone||'').toLowerCase().includes(q) ||
+      (j.notes||'').toLowerCase().includes(q)
+    );
+    renderJobsList(filtered);
+  }
+
+  function clearJobSearch() {
+    document.getElementById('jobs-search').value = '';
+    document.getElementById('jobs-search-clear').classList.add('hidden');
+    renderJobsList(_allJobs);
   }
 
   function renderJobCard(job, container) {
