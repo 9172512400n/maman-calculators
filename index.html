@@ -1266,7 +1266,7 @@
     const hl = document.getElementById('con-menu-headline').textContent;
     const ad = document.getElementById('con-menu-advisory').textContent;
     const sf = n('con-menu-quick-sf'), D = n('con-menu-sf-depth');
-    return 'Concrete Quick SF Estimate\n\nSF: ' + sf + ' ft²\nThickness: ' + D + ' in\n\n' + hl + '\n\n' + ad;
+    return '📐 CONCRETE ESTIMATE\n══════════════════════\n\nTotal SF: '+sf+' ft²\nThickness: '+D+' in\n\n══════════════════════\n'+hl+'\n'+ad+'\n══════════════════════\nMaman Calculators\nsurfaceestimator.com';
   }
   function emailConQuickSF() { window.location.href = 'mailto:?subject=Concrete%20Estimate&body=' + encodeURIComponent(_conQuickBody()); }
   function textConQuickSF()  { window.location.href = 'sms:?body=' + encodeURIComponent(_conQuickBody()); }
@@ -1328,7 +1328,13 @@
     ['asp-r-yards','asp-r-tons','asp-r-cost'].forEach(id=>setText(id,'—'));
   }
   function _aspBody() {
-    return 'Asphalt Estimate\n\nWidth: '+n('asp-width')+' ft\nLength: '+n('asp-length')+' ft\nThickness: '+n('asp-depth')+' in\n\nCubic Yards: '+document.getElementById('asp-r-yards').textContent+'\nHot Mix Tons: '+document.getElementById('asp-r-tons').textContent+'\nTotal Cost: '+document.getElementById('asp-r-cost').textContent;
+    let inputs = '';
+    if(_aspMode==='sf'){
+      inputs = 'Total SF: '+n('asp-quick-sf')+' ft²\nThickness: '+n('asp-sf-depth')+' in\n';
+    } else {
+      inputs = 'Width: '+n('asp-width')+' ft\nLength: '+n('asp-length')+' ft\nThickness: '+n('asp-depth')+' in\nTotal SF: '+(n('asp-width')*n('asp-length'))+' ft²\n';
+    }
+    return '📐 ASPHALT ESTIMATE\n══════════════════════\n\n'+inputs+'\n══════════════════════\nCubic Yards: '+document.getElementById('asp-r-yards').textContent+'\nHot Mix Tons: '+document.getElementById('asp-r-tons').textContent+'\nTotal Cost: '+document.getElementById('asp-r-cost').textContent+'\n══════════════════════\nMaman Calculators\nsurfaceestimator.com';
   }
   function emailAsphalt() { window.location.href='mailto:?subject=Asphalt%20Estimate&body='+encodeURIComponent(_aspBody()); }
   function textAsphalt()  { window.location.href='sms:?body='+encodeURIComponent(_aspBody()); }
@@ -1462,7 +1468,21 @@
   function _conBody(){
     const hl=document.getElementById('con2-headline').textContent;
     const ad=document.getElementById('con2-advisory').textContent;
-    return conSubTitles[conSubType]+' Estimate\n\n'+hl+'\n\n'+ad;
+    let inputs='';
+    if(['slab','wall','footing'].includes(conSubType)){
+      if(_conMode==='sf') inputs='Total SF: '+n('con-quick-sf')+' ft²\nThickness: '+n('con-sf-depth')+' in\n';
+      else inputs='Length: '+n('con-lwt-length')+' ft\nWidth/Height: '+n('con-lwt-height')+' ft\nThickness: '+n('con-lwt-thickness')+' in\nTotal SF: '+(n('con-lwt-length')*n('con-lwt-height'))+' ft²\n';
+    } else if(conSubType==='column'){
+      if(_conColMode==='sf') inputs='Footprint SF: '+n('con-col-quick-sf')+' ft²\nHeight: '+n('con-col-sf-h')+' ft\n';
+      else inputs='Diameter: '+n('con-col2-dia')+' ft\nHeight: '+n('con-col2-h')+' ft\n';
+    } else if(conSubType==='circle'){
+      if(_conCircMode==='sf') inputs='Total SF: '+n('con-circ-quick-sf')+' ft²\nThickness: '+n('con-circ-sf-depth')+' in\n';
+      else inputs='Diameter: '+n('con-circ2-dia')+' ft\nThickness: '+n('con-circ2-depth')+' in\n';
+    } else if(conSubType==='stairs'){
+      if(_conStairMode==='sf') inputs='Total SF: '+n('con-stair-quick-sf')+' ft²\nAvg Depth: '+n('con-stair-sf-depth')+' in\n';
+      else inputs='Rise: '+n('con-st-rise')+' in\nRun: '+n('con-st-run')+' in\nWidth: '+n('con-st-width')+' ft\nSteps: '+n('con-st-steps')+'\n';
+    }
+    return '📐 '+conSubTitles[conSubType].toUpperCase()+' ESTIMATE\n══════════════════════\n\n'+inputs+'\n══════════════════════\n'+hl+'\n'+ad+'\n══════════════════════\nMaman Calculators\nsurfaceestimator.com';
   }
   function emailConcrete2(){ window.location.href='mailto:?subject='+encodeURIComponent(conSubTitles[conSubType]+' Estimate')+'&body='+encodeURIComponent(_conBody()); }
   function textConcrete2() { window.location.href='sms:?body='+encodeURIComponent(_conBody()); }
@@ -1496,8 +1516,15 @@
     ['snd-r-tons','snd-r-yards','snd-r-cost'].forEach(id=>setText(id,'—'));
   }
   function _sndBody(){
-    const mat=document.getElementById('snd-material').options[document.getElementById('snd-material').selectedIndex].text;
-    return 'Sand & Gravel Estimate\n\nMaterial: '+mat+'\nWidth: '+n('snd-width')+' ft\nLength: '+n('snd-length')+' ft\nDepth: '+n('snd-depth')+' in\n\nTons: '+document.getElementById('snd-r-tons').textContent+'\nCubic Yards: '+document.getElementById('snd-r-yards').textContent+'\nTotal Cost: '+document.getElementById('snd-r-cost').textContent;
+    let inputs='';
+    if(_sndMode==='sf'){
+      const mat=document.getElementById('snd-sf-material').options[document.getElementById('snd-sf-material').selectedIndex].text;
+      inputs='Total SF: '+n('snd-quick-sf')+' ft²\nThickness: '+n('snd-sf-depth')+' in\nMaterial: '+mat+'\n';
+    } else {
+      const mat=document.getElementById('snd-material').options[document.getElementById('snd-material').selectedIndex].text;
+      inputs='Width: '+n('snd-width')+' ft\nLength: '+n('snd-length')+' ft\nDepth: '+n('snd-depth')+' in\nTotal SF: '+(n('snd-width')*n('snd-length'))+' ft²\nMaterial: '+mat+'\n';
+    }
+    return '📐 SAND & GRAVEL ESTIMATE\n══════════════════════\n\n'+inputs+'\n══════════════════════\nTons: '+document.getElementById('snd-r-tons').textContent+'\nCubic Yards: '+document.getElementById('snd-r-yards').textContent+'\nTotal Cost: '+document.getElementById('snd-r-cost').textContent+'\n══════════════════════\nMaman Calculators\nsurfaceestimator.com';
   }
   function emailSand(){ window.location.href='mailto:?subject=Sand%20%26%20Gravel%20Estimate&body='+encodeURIComponent(_sndBody()); }
   function textSand() { window.location.href='sms:?body='+encodeURIComponent(_sndBody()); }
@@ -1534,7 +1561,7 @@
     ['curb-q-r-yards','curb-q-r-bags60','curb-q-r-bags80','curb-q-r-cost'].forEach(id=>setText(id,'—'));
   }
   function _curbQuickBody() {
-    return 'Curb & Gutter Estimate\n\nLinear Feet: '+n('curb-quick-lf')+' ft\nDepth: '+n('curb-q-depth')+' in\nHeight: '+n('curb-q-height')+' in\nGutter: '+n('curb-q-gutter')+' in\nFlag: '+n('curb-q-flag')+' in\n\nYards: '+document.getElementById('curb-q-r-yards').textContent+'\n60lb bags: '+document.getElementById('curb-q-r-bags60').textContent+'\n80lb bags: '+document.getElementById('curb-q-r-bags80').textContent+'\nTotal Cost: '+document.getElementById('curb-q-r-cost').textContent;
+    return '📐 CURB & GUTTER ESTIMATE\n══════════════════════\n\nLinear Feet: '+n('curb-quick-lf')+' ft\nDepth: '+n('curb-q-depth')+' in\nHeight: '+n('curb-q-height')+' in\nGutter: '+n('curb-q-gutter')+' in\nFlag: '+n('curb-q-flag')+' in\n\n══════════════════════\nCubic Yards: '+document.getElementById('curb-q-r-yards').textContent+'\n60lb bags: '+document.getElementById('curb-q-r-bags60').textContent+'\n80lb bags: '+document.getElementById('curb-q-r-bags80').textContent+'\nTotal Cost: '+document.getElementById('curb-q-r-cost').textContent+'\n══════════════════════\nMaman Calculators\nsurfaceestimator.com';
   }
   function emailCurbQuick() { window.location.href='mailto:?subject=Curb%20%26%20Gutter%20Estimate&body='+encodeURIComponent(_curbQuickBody()); }
   function textCurbQuick()  { window.location.href='sms:?body='+encodeURIComponent(_curbQuickBody()); }
@@ -1554,7 +1581,7 @@
     ['curb-r-yards','curb-r-bags60','curb-r-bags80','curb-r-cost'].forEach(id=>setText(id,'—'));
   }
   function _curbBody(){
-    return 'Curb & Gutter Estimate\n\nDepth: '+n('curb-depth')+' in\nHeight: '+n('curb-height')+' in\nGutter: '+n('curb-gutter')+' in\nFlag: '+n('curb-flag')+' in\nLength: '+n('curb-length')+' ft\n\nYards: '+document.getElementById('curb-r-yards').textContent+'\n60lb bags: '+document.getElementById('curb-r-bags60').textContent+'\n80lb bags: '+document.getElementById('curb-r-bags80').textContent+'\nTotal Cost: '+document.getElementById('curb-r-cost').textContent;
+    return '📐 CURB & GUTTER ESTIMATE\n══════════════════════\n\nLength: '+n('curb-length')+' ft\nDepth: '+n('curb-depth')+' in\nHeight: '+n('curb-height')+' in\nGutter: '+n('curb-gutter')+' in\nFlag: '+n('curb-flag')+' in\n\n══════════════════════\nCubic Yards: '+document.getElementById('curb-r-yards').textContent+'\n60lb bags: '+document.getElementById('curb-r-bags60').textContent+'\n80lb bags: '+document.getElementById('curb-r-bags80').textContent+'\nTotal Cost: '+document.getElementById('curb-r-cost').textContent+'\n══════════════════════\nMaman Calculators\nsurfaceestimator.com';
   }
   function emailCurb(){ window.location.href='mailto:?subject=Curb%20%26%20Gutter%20Estimate&body='+encodeURIComponent(_curbBody()); }
   function textCurb() { window.location.href='sms:?body='+encodeURIComponent(_curbBody()); }
