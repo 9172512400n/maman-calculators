@@ -572,29 +572,20 @@
       border-radius: 16px;
       border: 1px solid var(--border);
       overflow: hidden;
-      display: flex;
-      flex-direction: row;
-      align-items: stretch;
-      transform: translateX(0);
-      transition: transform 0.25s ease;
-    }
-    .job-card-wrap.swiped {
-      transform: translateX(-90px);
+      position: relative;
     }
     .job-card-wrap .job-delete-reveal {
-      min-width: 90px; width: 90px;
+      position: absolute; right: 0; top: 0; bottom: 0;
+      width: 90px;
       background: #c0392b;
       display: flex; align-items: center; justify-content: center;
       flex-direction: column; gap: 4px;
       cursor: pointer; user-select: none;
       font-size: 22px; color: #fff; font-weight: 800;
-      flex-shrink: 0;
-      margin-right: -90px;
       visibility: hidden;
     }
     .job-card-wrap.swiped .job-delete-reveal {
       visibility: visible;
-      margin-right: 0;
     }
     .job-card-wrap .job-delete-reveal span {
       font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
@@ -603,9 +594,11 @@
       background: var(--card);
       border-radius: 0;
       overflow: hidden;
-      flex: 1;
-      min-width: 0;
+      transition: transform 0.25s ease, background 0.2s;
+      position: relative; z-index: 1;
+      width: 100%;
     }
+    .job-card-wrap.swiped .job-card { transform: translateX(-90px); }
     .job-card-header {
       display: flex; align-items: flex-start;
       padding: 14px 16px; gap: 12px; cursor: pointer;
@@ -2805,10 +2798,10 @@
     delReveal.onclick = () => deleteJobCard(job.id);
     wrap.appendChild(delReveal);
 
-    // Touch swipe logic — move the WRAP, not the card
+    // Touch swipe logic
     let startX = 0, isSwiped = false;
-    wrap.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, {passive:true});
-    wrap.addEventListener('touchend', e => {
+    card.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, {passive:true});
+    card.addEventListener('touchend', e => {
       const dx = e.changedTouches[0].clientX - startX;
       if (dx < -50) {
         wrap.classList.add('swiped'); isSwiped = true;
