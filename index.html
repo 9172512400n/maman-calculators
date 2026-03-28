@@ -446,6 +446,40 @@
     .curb-diagram svg { display: block; width: 100%; height: auto; }
 
     /* ══════════════════ MEASUREMENTS ══════════════════ */
+    /* Full width save job button */
+    .proj-save-btn-full {
+      display: block; width: 100%;
+      background: #1565c0; color: #fff;
+      border: none; border-radius: 14px;
+      padding: 16px; font-size: 16px; font-weight: 800;
+      cursor: pointer; font-family: inherit; margin-bottom: 10px;
+      transition: opacity 0.15s;
+    }
+    .proj-save-btn-full:active { opacity: 0.8; }
+
+    /* Save job sheet fields */
+    .save-job-field { margin-bottom: 14px; }
+    .save-job-label {
+      font-size: 12px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--text3); margin-bottom: 6px;
+    }
+    .save-job-input {
+      width: 100%; background: var(--input-bg);
+      border: 1.5px solid var(--border); border-radius: 12px;
+      padding: 13px 14px; font-size: 15px; color: var(--input-text);
+      outline: none; font-family: inherit;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .save-job-input:focus { border-color: #1565c0; }
+    .save-job-textarea {
+      min-height: 80px; resize: none; line-height: 1.5;
+    }
+    .save-job-summary {
+      background: var(--card2); border-radius: 10px;
+      padding: 12px 14px; font-size: 13px; color: var(--text2);
+      line-height: 1.7; border-left: 3px solid var(--green);
+    }
+
     /* Project save bar */
     .proj-header-row {
       display: flex; gap: 10px; align-items: center;
@@ -1222,14 +1256,8 @@
 ════════════════════════════════════ -->
 <div class="page" id="page-meas">
 
-  <!-- Project header -->
-  <div class="proj-header-row">
-    <div class="proj-field-wrap">
-      <input class="proj-name-input" type="text" id="proj-name" placeholder="📍 Project address or name" />
-    </div>
-    <button class="proj-save-btn" onclick="saveProject()">💾 Save</button>
-  </div>
-  <button class="proj-list-btn" onclick="openProjects()">📂 My Saved Projects</button>
+  <!-- Saved projects button at top -->
+  <button class="proj-list-btn" onclick="openProjects()">📂 My Saved Jobs</button>
 
   <div class="meas-section-lbl">Areas / Rooms</div>
   <div id="meas-rows"></div>
@@ -1258,6 +1286,39 @@
     <button class="abtn abtn-clear" onclick="measClear()">Clear</button>
     <button class="abtn abtn-text"  onclick="measText()">📱 Text</button>
     <button class="abtn abtn-email" onclick="measEmail()">📧 Email</button>
+  </div>
+  <button class="proj-save-btn-full" onclick="openSaveJob()">💾 Save Job</button>
+</div>
+
+<!-- ─── SAVE JOB SHEET ─── -->
+<div class="picker-overlay hidden" id="save-job-overlay" onclick="closeSaveJob()">
+  <div class="picker-sheet" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;">
+    <div class="picker-handle"></div>
+    <div class="picker-title">💾 Save Job</div>
+    <div class="picker-sub">Add job details to save with your measurements</div>
+
+    <div class="save-job-field">
+      <div class="save-job-label">📍 Job Address</div>
+      <input class="save-job-input" type="text" id="sj-address" placeholder="123 Main St, Brooklyn NY" autocomplete="street-address" />
+    </div>
+    <div class="save-job-field">
+      <div class="save-job-label">👤 Customer Name</div>
+      <input class="save-job-input" type="text" id="sj-customer" placeholder="John Smith" autocomplete="name" />
+    </div>
+    <div class="save-job-field">
+      <div class="save-job-label">📞 Phone Number</div>
+      <input class="save-job-input" type="tel" id="sj-phone" placeholder="(917) 000-0000" autocomplete="tel" inputmode="tel" />
+    </div>
+    <div class="save-job-field">
+      <div class="save-job-label">📝 Notes</div>
+      <textarea class="save-job-input save-job-textarea" id="sj-notes" placeholder="Job details, material specs, access notes..."></textarea>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">Measurements Summary</div>
+    <div class="save-job-summary" id="sj-summary"></div>
+
+    <button class="proj-save-btn-full" id="sj-save-btn" onclick="confirmSaveJob()" style="margin-top:16px;">💾 Save Job</button>
+    <button class="picker-cancel" onclick="closeSaveJob()">Cancel</button>
   </div>
 </div>
 
@@ -1886,12 +1947,39 @@
     window.scrollTo(0,0);
   }
 
-  // ── PROJECTS SAVE / LOAD ──
-  async function saveProject() {
-    const name = document.getElementById('proj-name').value.trim();
-    if (!name) return alert('Please enter a project name or address first.');
+  // ── SAVE JOB SHEET ──
+  function openSaveJob() {
+    // collect areas for preview
+    let lines = '', total = 0;
+    document.querySelectorAll('.area-row').forEach(row => {
+      const id = row.id.replace('area-row-', '');
+      const nm = row.querySelector('.area-name-input').value || ('Area ' + id);
+      const w  = parseFloat(document.getElementById('area-w-' + id)?.value) || 0;
+      const h  = parseFloat(document.getElementById('area-h-' + id)?.value) || 0;
+      if (w && h) { total += w * h; lines += nm + ': ' + w + ' × ' + h + ' = ' + (w*h).toLocaleString() + ' SF\n'; }
+    });
+    if (!lines) return alert('Add at least one area with measurements first.');
 
-    // collect areas
+    const price = document.getElementById('meas-price').value;
+    const est   = document.getElementById('meas-est-total').textContent;
+    let summary = lines + '\nTotal SF: ' + total.toLocaleString('en-US',{maximumFractionDigits:0}) + ' SF';
+    if (price) summary += '\nPrice per SF: $' + price;
+    if (est !== '—') summary += '\nEstimated Total: ' + est;
+    document.getElementById('sj-summary').textContent = summary;
+    document.getElementById('save-job-overlay').classList.remove('hidden');
+  }
+
+  function closeSaveJob() {
+    document.getElementById('save-job-overlay').classList.add('hidden');
+  }
+
+  async function confirmSaveJob() {
+    const address  = document.getElementById('sj-address').value.trim();
+    const customer = document.getElementById('sj-customer').value.trim();
+    const phone    = document.getElementById('sj-phone').value.trim();
+    const notes    = document.getElementById('sj-notes').value.trim();
+    if (!address) return alert('Please enter a job address.');
+
     const areas = [];
     let total = 0;
     document.querySelectorAll('.area-row').forEach(row => {
@@ -1902,20 +1990,23 @@
       if (w && h) { areas.push({ name: nm, w, h, sf: w * h }); total += w * h; }
     });
 
-    if (areas.length === 0) return alert('Add at least one area with measurements first.');
-
     const price = document.getElementById('meas-price').value || '';
     const extra = document.getElementById('meas-extra').value || '';
 
-    const btn = document.querySelector('.proj-save-btn');
+    const btn = document.getElementById('sj-save-btn');
     btn.textContent = '⏳ Saving...'; btn.disabled = true;
 
     try {
-      await window._saveProject({ name, areas, totalSF: total, price, extra });
+      await window._saveProject({ name: address, address, customer, phone, notes, areas, totalSF: total, price, extra });
       btn.textContent = '✅ Saved!';
-      setTimeout(() => { btn.textContent = '💾 Save'; btn.disabled = false; }, 2000);
+      setTimeout(() => {
+        btn.textContent = '💾 Save Job'; btn.disabled = false;
+        closeSaveJob();
+        // clear fields
+        ['sj-address','sj-customer','sj-phone','sj-notes'].forEach(id => document.getElementById(id).value = '');
+      }, 1500);
     } catch(e) {
-      btn.textContent = '💾 Save'; btn.disabled = false;
+      btn.textContent = '💾 Save Job'; btn.disabled = false;
       alert('Error saving. Please try again.');
     }
   }
@@ -1935,13 +2026,16 @@
         return;
       }
       projects.forEach(proj => {
-        const date = proj.createdAt?.toDate ? proj.createdAt.toDate().toLocaleDateString() : '';
+        const date     = proj.createdAt?.toDate ? proj.createdAt.toDate().toLocaleDateString() : '';
+        const customer = proj.customer ? ' · ' + proj.customer : '';
+        const phone    = proj.phone    ? ' · ' + proj.phone    : '';
         const div = document.createElement('div');
         div.className = 'proj-item';
         div.innerHTML = `
           <div class="proj-item-body" onclick="loadProject(${JSON.stringify(proj).replace(/"/g,'&quot;')})">
-            <div class="proj-item-name">📍 ${proj.name}</div>
-            <div class="proj-item-meta">${proj.areas?.length || 0} areas · ${date}</div>
+            <div class="proj-item-name">📍 ${proj.address || proj.name}</div>
+            <div class="proj-item-meta">${proj.areas?.length || 0} areas${customer}${phone}</div>
+            <div class="proj-item-meta">${date}</div>
           </div>
           <div class="proj-item-sf">${(proj.totalSF||0).toLocaleString('en-US',{maximumFractionDigits:0})} SF</div>
           <button class="proj-item-del" onclick="event.stopPropagation();deleteProject('${proj.id}',this.closest('.proj-item'))">✕</button>
@@ -1959,8 +2053,6 @@
 
   function loadProject(proj) {
     closeProjects();
-    // Set project name
-    document.getElementById('proj-name').value = proj.name || '';
     // Clear and reload areas
     document.getElementById('meas-rows').innerHTML = '';
     measRowCount = 0;
@@ -1969,6 +2061,11 @@
     document.getElementById('meas-price').value = proj.price || '';
     document.getElementById('meas-extra').value = proj.extra || '';
     measUpdateTotals();
+    // Show a toast with job info
+    const toast = document.getElementById('share-toast');
+    toast.textContent = '📍 Loaded: ' + (proj.address || proj.name);
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
   }
 
   async function deleteProject(id, el) {
