@@ -3252,17 +3252,26 @@
     document.getElementById('meas-rows').innerHTML = '';
     measRowCount = 0;
     lines.forEach(line => {
-      const parts = line.split(/\s+(?:by|x|times|×)\s+/i);
+      // Convert ALL word numbers to digits first
+      const wordMap = {
+        'zero':0,'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,'eight':8,'nine':9,
+        'ten':10,'eleven':11,'twelve':12,'thirteen':13,'fourteen':14,'fifteen':15,'sixteen':16,
+        'seventeen':17,'eighteen':18,'nineteen':19,'twenty':20,'thirty':30,'forty':40,'fifty':50,
+        'sixty':60,'seventy':70,'eighty':80,'ninety':90,'hundred':100,'thousand':1000
+      };
+      let normalized = line.toLowerCase();
+      // Replace word numbers with digits (longest words first to avoid partial matches)
+      Object.keys(wordMap).sort((a,b) => b.length - a.length).forEach(word => {
+        normalized = normalized.replace(new RegExp('\\b' + word + '\\b', 'g'), wordMap[word]);
+      });
+      // Now extract numbers — first two numbers found
+      const allNums = normalized.match(/\d+\.?\d*/g);
       let w = NaN, l = NaN;
-      if (parts.length >= 2) {
-        w = window.spokenToNum ? window.spokenToNum(parts[0].trim()) : parseFloat(parts[0]);
-        l = window.spokenToNum ? window.spokenToNum(parts[1].trim()) : parseFloat(parts[1]);
-        // Final fallback: grab digits if spokenToNum returned NaN
-        if (isNaN(w)) { const d = parts[0].match(/[\d]+/); if(d) w = parseFloat(d[0]); }
-        if (isNaN(l)) { const d = parts[1].match(/[\d]+/); if(d) l = parseFloat(d[0]); }
-      } else {
-        const digits = line.match(/[\d]+\.?[\d]*/g);
-        if (digits && digits.length >= 2) { w = parseFloat(digits[0]); l = parseFloat(digits[1]); }
+      if (allNums && allNums.length >= 2) {
+        w = parseFloat(allNums[0]);
+        l = parseFloat(allNums[1]);
+      } else if (allNums && allNums.length === 1) {
+        // Only one number — skip
       }
       if (!isNaN(w) && !isNaN(l) && w > 0 && l > 0) {
         count++;
