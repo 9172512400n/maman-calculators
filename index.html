@@ -3207,7 +3207,7 @@
   };
 
   // Convert spoken numbers to digits
-  function spokenToNum(str) {
+  window.spokenToNum = function spokenToNum(str) {
     const words = { 'zero':0,'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,'eight':8,'nine':9,
       'ten':10,'eleven':11,'twelve':12,'thirteen':13,'fourteen':14,'fifteen':15,'sixteen':16,'seventeen':17,'eighteen':18,'nineteen':19,
       'twenty':20,'thirty':30,'forty':40,'fifty':50,'sixty':60,'seventy':70,'eighty':80,'ninety':90,
@@ -3228,7 +3228,7 @@
     return total + current || NaN;
   }
 
-  function normalizeLine(line) {
+  window.normalizeLine = function normalizeLine(line) {
     // Normalize separators: "by", "x", "times", "×", "*"
     return line
       .replace(/\bby\b/gi, 'x')
@@ -3255,8 +3255,11 @@
       const parts = line.split(/\s+(?:by|x|times|×)\s+/i);
       let w = NaN, l = NaN;
       if (parts.length >= 2) {
-        w = spokenToNum(parts[0].trim());
-        l = spokenToNum(parts[1].trim());
+        w = window.spokenToNum ? window.spokenToNum(parts[0].trim()) : parseFloat(parts[0]);
+        l = window.spokenToNum ? window.spokenToNum(parts[1].trim()) : parseFloat(parts[1]);
+        // Final fallback: grab digits if spokenToNum returned NaN
+        if (isNaN(w)) { const d = parts[0].match(/[\d]+/); if(d) w = parseFloat(d[0]); }
+        if (isNaN(l)) { const d = parts[1].match(/[\d]+/); if(d) l = parseFloat(d[0]); }
       } else {
         const digits = line.match(/[\d]+\.?[\d]*/g);
         if (digits && digits.length >= 2) { w = parseFloat(digits[0]); l = parseFloat(digits[1]); }
