@@ -1973,6 +1973,8 @@
     const idx = tabOrder.indexOf(name);
     document.querySelectorAll('.bnav-btn').forEach((b,i) => b.classList.toggle('active', i === idx));
     if (name === 'jobs') loadJobsPage();
+    // Save last active tab
+    try { localStorage.setItem('gbf_active_tab', name); } catch(e) {}
     window.scrollTo(0, 0);
   }
 
@@ -3235,6 +3237,18 @@
 
   // Init measurements
   measAddRow();measAddRow();measAddRow();
+
+  // Restore last active tab
+  try {
+    const lastTab = localStorage.getItem('gbf_active_tab');
+    if (lastTab && lastTab !== 'meas') {
+      const pills = document.querySelectorAll('.pill-tab');
+      const tabIdx = ['meas','asphalt','concrete','sand','curb','jobs'].indexOf(lastTab);
+      if (tabIdx >= 0 && pills[tabIdx]) {
+        switchTab(lastTab, pills[tabIdx]);
+      }
+    }
+  } catch(e) {}
 
   // Photo handling
   window._pendingPhotos = []; // files waiting to upload
