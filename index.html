@@ -1059,8 +1059,9 @@
     </div>
   </div>
 
-  <div class="btn-group">
-    <button class="abtn abtn-calc" onclick="calcAsphalt()">Calculate</button>
+  <div class="btn-group" style="display:flex;gap:8px;">
+    <button class="abtn abtn-calc" onclick="calcAsphalt()" style="flex:1;">Calculate</button>
+    <button class="abtn" onclick="startCalcVoice(this)" title="Speak measurements" style="background:var(--card2);font-size:20px;padding:0 14px;flex-shrink:0;">🎙️</button>
   </div>
   <div class="btn-group">
     <button class="abtn abtn-clear" onclick="clearAsphalt()">Clear</button>
@@ -1256,8 +1257,9 @@
       <div class="irow"><span class="irow-lbl">Cost per yard <span class="opt">optional</span></span><input type="number" id="con2-cost" placeholder="$" inputmode="decimal" /></div>
     </div>
 
-    <div class="btn-group">
-      <button class="abtn abtn-calc" onclick="calcConcrete2()">Calculate</button>
+    <div class="btn-group" style="display:flex;gap:8px;">
+      <button class="abtn abtn-calc" onclick="calcConcrete2()" style="flex:1;">Calculate</button>
+      <button class="abtn" onclick="startCalcVoice(this)" title="Speak measurements" style="background:var(--card2);font-size:20px;padding:0 14px;flex-shrink:0;">🎙️</button>
     </div>
     <div class="btn-group">
       <button class="abtn abtn-clear" onclick="clearConcrete2()">Clear</button>
@@ -1374,8 +1376,9 @@
     </div>
   </div>
 
-  <div class="btn-group">
-    <button class="abtn abtn-calc" onclick="calcSand()">Calculate</button>
+  <div class="btn-group" style="display:flex;gap:8px;">
+    <button class="abtn abtn-calc" onclick="calcSand()" style="flex:1;">Calculate</button>
+    <button class="abtn" onclick="startCalcVoice(this)" title="Speak measurements" style="background:var(--card2);font-size:20px;padding:0 14px;flex-shrink:0;">🎙️</button>
   </div>
   <div class="btn-group">
     <button class="abtn abtn-clear" onclick="clearSand()">Clear</button>
@@ -1509,8 +1512,9 @@
     </div>
   </div>
 
-  <div class="btn-group">
-    <button class="abtn abtn-calc" onclick="calcCurb()">Calculate</button>
+  <div class="btn-group" style="display:flex;gap:8px;">
+    <button class="abtn abtn-calc" onclick="calcCurb()" style="flex:1;">Calculate</button>
+    <button class="abtn" onclick="startCalcVoice(this)" title="Speak measurements" style="background:var(--card2);font-size:20px;padding:0 14px;flex-shrink:0;">🎙️</button>
   </div>
   <div class="btn-group">
     <button class="abtn abtn-clear" onclick="clearCurb()">Clear</button>
@@ -3142,28 +3146,13 @@
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return; // not supported
 
-    const btn = document.createElement('button');
-    btn.id = 'voice-btn';
-    btn.innerHTML = '🎙️';
-    btn.title = 'Tap to speak measurements';
-    btn.style.cssText = `
-      position: fixed; bottom: 90px; right: 20px; z-index: 999;
-      width: 56px; height: 56px; border-radius: 50%;
-      background: linear-gradient(135deg, #f97316, #ef4444);
-      border: none; color: white; font-size: 24px;
-      box-shadow: 0 4px 16px rgba(249,115,22,0.5);
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s;
-    `;
-    document.body.appendChild(btn);
-
-    // Status toast
+    // Status toast only (no floating button — mic is per-row on measurements, and on other tabs)
     const toast = document.createElement('div');
     toast.id = 'voice-toast';
     toast.style.cssText = `
-      position: fixed; bottom: 158px; right: 16px; z-index: 1000;
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 1000;
       background: rgba(0,0,0,0.85); color: #fff; font-size: 13px;
-      padding: 8px 14px; border-radius: 20px; max-width: 240px;
+      padding: 8px 18px; border-radius: 20px; max-width: 280px;
       text-align: center; display: none; pointer-events: none;
     `;
     document.body.appendChild(toast);
@@ -3299,11 +3288,9 @@
     let recognition = null;
     let listening = false;
 
-    btn.addEventListener('click', () => {
-      if (listening) {
-        recognition && recognition.stop();
-        return;
-      }
+    // Exposed globally so calc tab mic buttons can trigger it
+    window.startCalcVoice = function(triggerBtn) {
+      if (listening) { recognition && recognition.stop(); return; }
       recognition = new SpeechRecognition();
       recognition.lang = 'en-US';
       recognition.interimResults = false;
@@ -3311,9 +3298,7 @@
 
       recognition.onstart = () => {
         listening = true;
-        btn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
-        btn.style.boxShadow = '0 0 0 8px rgba(239,68,68,0.25)';
-        btn.innerHTML = '⏹️';
+        if (triggerBtn) { triggerBtn.textContent = '🔴'; triggerBtn.style.opacity = '1'; }
         showToast('🎙️ Listening... speak your measurements', 10000);
       };
 
@@ -3328,13 +3313,11 @@
 
       recognition.onend = () => {
         listening = false;
-        btn.style.background = 'linear-gradient(135deg, #f97316, #ef4444)';
-        btn.style.boxShadow = '0 4px 16px rgba(249,115,22,0.5)';
-        btn.innerHTML = '🎙️';
+        if (triggerBtn) { triggerBtn.textContent = '🎙️'; triggerBtn.style.opacity = ''; }
       };
 
       recognition.start();
-    });
+    };
   })();
 </script>
 </body>
