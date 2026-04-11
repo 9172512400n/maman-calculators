@@ -1000,11 +1000,11 @@
 <!-- ─── PILL TABS ─── -->
 <div class="pill-wrap">
   <div class="pill-tabs">
-    <button class="pill-tab active" onclick="switchTab('asphalt',this)">Asphalt</button>
+    <button class="pill-tab active" onclick="switchTab('meas',this)">Measurements</button>
+    <button class="pill-tab" onclick="switchTab('asphalt',this)">Asphalt</button>
     <button class="pill-tab" onclick="switchTab('concrete',this)">Concrete</button>
     <button class="pill-tab" onclick="switchTab('sand',this)">Sand &amp; Gravel</button>
     <button class="pill-tab" onclick="switchTab('curb',this)">Curb &amp; Gutter</button>
-    <button class="pill-tab" onclick="switchTab('meas',this)">Measurements</button>
     <button class="pill-tab" onclick="switchTab('jobs',this)">📋 Jobs</button>
   </div>
 </div>
@@ -1012,7 +1012,7 @@
 <!-- ════════════════════════════════════
      ASPHALT
 ════════════════════════════════════ -->
-<div class="page active" id="page-asphalt">
+<div class="page" id="page-asphalt">
 
   <!-- Quick SF toggle -->
   <div class="sf-toggle-row">
@@ -1536,7 +1536,7 @@
 <!-- ════════════════════════════════════
      MEASUREMENTS
 ════════════════════════════════════ -->
-<div class="page" id="page-meas">
+<div class="page active" id="page-meas">
 
   <!-- Saved projects button at top -->
   <!-- Top row: New Job + Saved Jobs -->
@@ -1956,7 +1956,7 @@
   })();
 
   // ── Tab switching ──
-  const tabOrder = ['asphalt','concrete','sand','curb','meas'];
+  const tabOrder = ['meas','asphalt','concrete','sand','curb'];
   function switchTab(name, el) {
     document.querySelectorAll('.pill-tab').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -2489,7 +2489,7 @@
     if(!sf) return;
     const pills=document.querySelectorAll('.pill-tab');
     if(target==='asphalt'){
-      switchTab('asphalt',pills[0]);
+      switchTab('meas',pills[0]);
       document.getElementById('asp-width').value=1;
       document.getElementById('asp-length').value=sf;
     } else if(target==='concrete-slab'){
@@ -2964,7 +2964,7 @@
   function loadJobToMeas(id) {
     const job = _allJobs.find(j=>j.id===id)||_panelJobs.find(j=>j.id===id); if(!job) return;
     closeJobsPanel();
-    switchTab('meas', document.querySelector('.pill-tab:nth-child(5)'));
+    switchTab('meas', document.querySelector('.pill-tab:nth-child(1)'));
     document.getElementById('meas-rows').innerHTML='';
     measRowCount=0;
     (job.areas||[]).forEach(a=>measAddRow(a.name,a.w,a.h));
