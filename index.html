@@ -16,6 +16,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
     import { getFirestore, collection, addDoc, getDocs, getDoc, deleteDoc, doc, updateDoc, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
     const app = initializeApp({
       apiKey: "AIzaSyB_w82VhilliRBcfge2dM7e3VGcQhdon78",
@@ -28,6 +29,11 @@
 
     const auth = getAuth(app);
     const db   = getFirestore(app);
+    const storage = getStorage(app);
+    window._storage = storage;
+    window._storageRef = storageRef;
+    window._uploadBytes = uploadBytes;
+    window._getDownloadURL = getDownloadURL;
 
     window._signOut = async () => {
       try { await signOut(auth); } catch(e) {}
@@ -49,7 +55,8 @@
     // Save project to Firestore
     window._saveProject = async (data) => {
       const ref = collection(db, 'users', window._uid, 'projects');
-      await addDoc(ref, { ...data, createdAt: serverTimestamp() });
+      const docRef = await addDoc(ref, { ...data, createdAt: serverTimestamp() });
+      return docRef;
     };
 
     // Load projects from Firestore
@@ -1717,6 +1724,15 @@
         <div class="save-job-label">📝 Notes</div>
         <textarea class="save-job-input save-job-textarea" id="sj-notes" placeholder="Job details, material specs, access notes..."></textarea>
       </div>
+      <div class="save-job-field">
+        <div class="save-job-label">📸 Photos / Plans <span style="font-weight:400;color:var(--text3);font-size:11px;">(optional)</span></div>
+        <label style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;background:var(--card2);border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:14px;color:var(--text2);">
+          <span style="font-size:24px;">📷</span>
+          <span id="sj-photo-label">Tap to add photos or plans</span>
+          <input type="file" id="sj-photos" accept="image/*" multiple style="display:none;" onchange="handlePhotoPreview(this)" />
+        </label>
+        <div id="sj-photo-previews" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
+      </div>
     </div>
 
     <!-- ADD TO EXISTING fields -->
@@ -2624,6 +2640,11 @@
 
   function closeSaveJob() {
     document.getElementById('save-job-overlay').classList.add('hidden');
+    // Clear photo previews
+    window._pendingPhotos = [];
+    const prev = document.getElementById('sj-photo-previews'); if (prev) prev.innerHTML = '';
+    const lbl = document.getElementById('sj-photo-label'); if (lbl) lbl.textContent = 'Tap to add photos or plans';
+    const inp = document.getElementById('sj-photos'); if (inp) inp.value = '';
     _sjMode = 'new'; _sjSelectedJobId = null;
     // reset to new mode
     setSJMode('new');
@@ -2696,15 +2717,25 @@
           clearTimeout(safetyTimer); resetBtn();
           return alert('Please enter a job address.');
         }
-        await window._saveProject({
+        // Save job first to get an ID, then upload photos
+        const jobRef = await window._saveProject({
           name: address, address, customer, phone, phone2, notes,
           source: _saveJobSource,
           calcs: [calc],
           totalSF: calc.totalSF||0,
           areas: calc.areas||[],
           price: calc.price||'',
-          summary: calc.summary||''
+          summary: calc.summary||'',
+          photos: []
         });
+        // Upload photos if any
+        if (window._pendingPhotos && window._pendingPhotos.length > 0 && jobRef?.id) {
+          btn.textContent = '⏳ Uploading photos...';
+          const photoUrls = await window.uploadPhotosForJob(jobRef.id);
+          if (photoUrls.length > 0) {
+            await window._updateJob(jobRef.id, { photos: photoUrls });
+          }
+        }
       }
 
       clearTimeout(safetyTimer);
@@ -2851,6 +2882,7 @@
       <div class="job-card-details" id="jdetails-${job.id}">
         ${calcsHTML?`<div style="margin-bottom:10px;">${calcsHTML}</div>`:''}
         ${job.notes?`<div style="background:var(--card2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text2);margin-bottom:10px;">📝 ${job.notes}</div>`:''}
+        ${(job.photos&&job.photos.length)?`<div style="margin-bottom:10px;"><div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:6px;">📸 Photos</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${job.photos.map(url=>`<a href="${url}" target="_blank"><img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid var(--border);" /></a>`).join('')}</div></div>`:''}
         <div class="job-actions">
           ${job.areas?.length?`<button class="job-action-btn jab-load" onclick="loadJobToMeas('${job.id}')">📐 Load</button>`:''}
           ${job.phone?`<button class="job-action-btn jab-call" onclick="window.location.href='tel:${job.phone.replace(/\D/g,'')}'" >📞 ${job.phone}</button>`:''}
@@ -3116,6 +3148,44 @@
 
   // Init measurements
   measAddRow();measAddRow();measAddRow();
+
+  // Photo handling
+  window._pendingPhotos = []; // files waiting to upload
+
+  window.handlePhotoPreview = function(input) {
+    const files = Array.from(input.files);
+    if (!files.length) return;
+    window._pendingPhotos = [...(window._pendingPhotos || []), ...files];
+    const label = document.getElementById('sj-photo-label');
+    if (label) label.textContent = window._pendingPhotos.length + ' photo(s) selected';
+    const previews = document.getElementById('sj-photo-previews');
+    if (!previews) return;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid var(--border);';
+        previews.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  window.uploadPhotosForJob = async function(jobId) {
+    const files = window._pendingPhotos || [];
+    if (!files.length) return [];
+    const urls = [];
+    for (const file of files) {
+      const path = 'jobs/' + window._uid + '/' + jobId + '/' + Date.now() + '_' + file.name;
+      const ref = window._storageRef(window._storage, path);
+      await window._uploadBytes(ref, file);
+      const url = await window._getDownloadURL(ref);
+      urls.push(url);
+    }
+    window._pendingPhotos = [];
+    return urls;
+  };
 
   // Quick Voice Box — parse textarea and fill rows
   window.parseQuickVoiceBox = function() {
