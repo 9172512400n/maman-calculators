@@ -3510,6 +3510,20 @@
         return;
       }
 
+      // Smart fallback: if no keywords found, use first two numbers as width+length
+      // and third number as thickness
+      if (width === null && length === null) {
+        const wordMapLocal = {'zero':0,'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,'eight':8,'nine':9,'ten':10,'eleven':11,'twelve':12,'thirteen':13,'fourteen':14,'fifteen':15,'sixteen':16,'seventeen':17,'eighteen':18,'nineteen':19,'twenty':20,'thirty':30,'forty':40,'fifty':50,'sixty':60,'seventy':70,'eighty':80,'ninety':90,'hundred':100,'thousand':1000};
+        let norm2 = t;
+        Object.keys(wordMapLocal).sort((a,b)=>b.length-a.length).forEach(w=>{ norm2=norm2.replace(new RegExp('\\b'+w+'\\b','g'),wordMapLocal[w]); });
+        const nums = norm2.match(/\d+\.?\d*/g);
+        if (nums && nums.length >= 1) {
+          if (nums[0]) { width = parseFloat(nums[0]); }
+          if (nums[1]) { length = parseFloat(nums[1]); }
+          if (nums[2]) { thickness = parseFloat(nums[2]); }
+        }
+      }
+
       if (tab === 'asphalt') {
         if (width !== null)     { setField('asp-width', width); filled.push('width'); }
         if (length !== null)    { setField('asp-length', length); filled.push('length'); }
@@ -3520,7 +3534,7 @@
         if (width !== null)     { setField('con-lwt-height', width); filled.push('width'); }
         if (length !== null)    { setField('con-lwt-length', length); filled.push('length'); }
         if (thickness !== null) { setField('con-lwt-thickness', thickness); filled.push('thickness'); }
-        if (filled.length) calcConcrete && calcConcrete();
+        if (filled.length) calcConcrete2 && calcConcrete2();
       } else if (tab === 'sand') {
         if (width !== null)     { setField('snd-width', width); filled.push('width'); }
         if (length !== null)    { setField('snd-length', length); filled.push('length'); }
