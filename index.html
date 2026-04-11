@@ -3206,6 +3206,38 @@
     return urls;
   };
 
+  // Convert spoken numbers to digits
+  function spokenToNum(str) {
+    const words = { 'zero':0,'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,'eight':8,'nine':9,
+      'ten':10,'eleven':11,'twelve':12,'thirteen':13,'fourteen':14,'fifteen':15,'sixteen':16,'seventeen':17,'eighteen':18,'nineteen':19,
+      'twenty':20,'thirty':30,'forty':40,'fifty':50,'sixty':60,'seventy':70,'eighty':80,'ninety':90,
+      'hundred':100,'thousand':1000 };
+    // First try as plain number
+    const n = parseFloat(str.replace(/,/g,''));
+    if (!isNaN(n)) return n;
+    // Try word conversion
+    let total = 0, current = 0;
+    str.toLowerCase().split(/\s+/).forEach(w => {
+      const v = words[w];
+      if (v !== undefined) {
+        if (v === 100) current *= 100;
+        else if (v === 1000) { total += current * 1000; current = 0; }
+        else current += v;
+      }
+    });
+    return total + current || NaN;
+  }
+
+  function normalizeLine(line) {
+    // Normalize separators: "by", "x", "times", "×", "*"
+    return line
+      .replace(/\bby\b/gi, 'x')
+      .replace(/\btimes\b/gi, 'x')
+      .replace(/[×\*]/g, 'x')
+      .replace(/\s+x\s+/gi, ' x ')
+      .replace(/\s+/g, ' ').trim();
+  }
+
   // Quick Voice Box — parse textarea and fill rows
   window.parseQuickVoiceBox = function() {
     const box = document.getElementById('quick-voice-box');
@@ -3219,10 +3251,13 @@
     const alreadyAdded = parseInt(box.dataset.addedLines || '0');
     const newLines = lines.slice(alreadyAdded);
     newLines.forEach((line, i) => {
-      // Match: 50x120, 50 x 120, 50by120, 50 by 120, 50*120
-      const m = line.match(/(\d+\.?\d*)\s*(?:x|by|\*|×|times)\s*(\d+\.?\d*)/i);
+      const norm = normalizeLine(line);
+      // Match: 50x120, 50 x 120, or "hundred x fifteen"
+      const m = norm.match(/([\w\s\.]+?)\s*x\s*([\w\s\.]+?)(?:\s*$|(?=\b(?:x|,|;)\b))/i) ||
+                norm.match(/([\d\.]+)\s*x\s*([\d\.]+)/i);
       if (m) {
-        const w = parseFloat(m[1]), l = parseFloat(m[2]);
+        const w = spokenToNum(m[1].trim()), l = spokenToNum(m[2].trim());
+        if (isNaN(w) || isNaN(l) || w <= 0 || l <= 0) return;
         count++;
         const namePart = line.replace(/(\d+\.?\d*\s*(?:x|by|\*|×|times)\s*\d+\.?\d*)/i,'').trim().replace(/[-,;:]/g,'').trim();
         // Try to fill the next empty row first
@@ -3323,7 +3358,9 @@
     r.onresult = (e) => {
       const t = e.results[0][0].transcript.toLowerCase();
       // Extract two numbers: width and length
-      const nums = t.match(/(\d+\.?\d*)/g);
+      const norm = normalizeLine ? normalizeLine(t) : t;
+      const mPair = norm.match(/([\d\.]+)\s*x\s*([\d\.]+)/i);
+      const nums = mPair ? [mPair[1], mPair[2]] : t.match(/(\d+\.?\d*)/g);
       if (nums && nums.length >= 2) {
         document.getElementById('area-w-'+idx).value = nums[0];
         document.getElementById('area-w-'+idx).dispatchEvent(new Event('input',{bubbles:true}));
