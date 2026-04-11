@@ -3178,6 +3178,43 @@
 
       let filled = [];
 
+      if (tab === 'meas') {
+        // Voice for measurements: "driveway 20 by 50" or "area 1 width 20 length 50"
+        // Pattern: [name] [number] by/x [number]
+        const areaMatch = t.match(/([a-z\s]+?)\s+(\d+\.?\d*)\s*(?:by|x|times|×)\s*(\d+\.?\d*)/i);
+        if (areaMatch) {
+          const areaName = areaMatch[1].trim().replace(/^area\s*/i, '') || 'Area';
+          const w = parseFloat(areaMatch[2]);
+          const l = parseFloat(areaMatch[3]);
+          // Add a new row with the name and dimensions
+          if (typeof measAddRow === 'function') {
+            measAddRow(areaName.charAt(0).toUpperCase() + areaName.slice(1), w, l);
+            measUpdateTotals && measUpdateTotals();
+            showToast('✅ Added: ' + areaName + ' ' + w + '×' + l);
+          }
+        } else if (width !== null || length !== null) {
+          // Just numbers spoken — fill next empty row
+          const rows = document.querySelectorAll('#meas-rows .area-row');
+          let filled = false;
+          for (const row of rows) {
+            const wInput = row.querySelector('input[placeholder="W"]');
+            const lInput = row.querySelector('input[placeholder="L"]');
+            if (wInput && lInput && !wInput.value && !lInput.value) {
+              if (width !== null) { wInput.value = width; wInput.dispatchEvent(new Event('input',{bubbles:true})); }
+              if (length !== null) { lInput.value = length; lInput.dispatchEvent(new Event('input',{bubbles:true})); }
+              measUpdateTotals && measUpdateTotals();
+              filled = true;
+              showToast('✅ Filled row: ' + (width||'?') + ' × ' + (length||'?'));
+              break;
+            }
+          }
+          if (!filled) showToast('❓ Heard: "' + transcript + '"\nTry: "driveway 20 by 50"');
+        } else {
+          showToast('❓ Heard: "' + transcript + '"\nTry: "driveway 20 by 50"');
+        }
+        return;
+      }
+
       if (tab === 'asphalt') {
         if (width !== null)     { setField('asp-width', width); filled.push('width'); }
         if (length !== null)    { setField('asp-length', length); filled.push('length'); }
