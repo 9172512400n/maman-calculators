@@ -1538,6 +1538,21 @@
     <button class="proj-list-btn" onclick="openProjects()" style="flex:1;margin-bottom:0;text-align:center;">📂 Saved</button>
   </div>
 
+  <!-- Quick Voice/Text Input -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:10px;">Quick Voice Entry</div>
+    <div style="display:flex;gap:8px;align-items:flex-start;">
+      <textarea id="quick-voice-box" placeholder="Speak or type measurements&#10;e.g. 50x120, 20x30, 15x40"
+        style="flex:1;min-height:80px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text1);font-size:15px;resize:none;outline:none;line-height:1.6;"
+        oninput="parseQuickVoiceBox()"></textarea>
+      <button id="quick-mic-btn" onclick="startQuickVoice()"
+        style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ef4444);border:none;color:white;font-size:22px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(249,115,22,0.4);">
+        🎙️
+      </button>
+    </div>
+    <div id="quick-voice-result" style="margin-top:8px;font-size:13px;color:var(--green);font-weight:600;"></div>
+  </div>
+
   <div class="meas-section-lbl">Areas / Rooms</div>
   <div id="meas-rows"></div>
   <button class="add-area-btn" onclick="measAddRow()">+ Add Area</button>
@@ -3101,6 +3116,74 @@
 
   // Init measurements
   measAddRow();measAddRow();measAddRow();
+
+  // Quick Voice Box — parse textarea and fill rows
+  window.parseQuickVoiceBox = function() {
+    const box = document.getElementById('quick-voice-box');
+    const result = document.getElementById('quick-voice-result');
+    if (!box) return;
+    const lines = box.value.split(/[\n,;]+/).map(l => l.trim()).filter(Boolean);
+    let totalSF = 0;
+    let count = 0;
+    // Clear existing rows and rebuild from voice box
+    document.getElementById('meas-rows').innerHTML = '';
+    measRowCount = 0;
+    lines.forEach(line => {
+      // Match: 50x120, 50 x 120, 50by120, 50 by 120, 50*120
+      const m = line.match(/(\d+\.?\d*)\s*(?:x|by|\*|×|times)\s*(\d+\.?\d*)/i);
+      if (m) {
+        const w = parseFloat(m[1]), l = parseFloat(m[2]);
+        totalSF += w * l;
+        count++;
+        // Extract optional name (words before numbers)
+        const namePart = line.replace(/(\d+\.?\d*\s*(?:x|by|\*|×|times)\s*\d+\.?\d*)/i,'').trim().replace(/[-,;:]/g,'').trim();
+        measAddRow(namePart || ('Area ' + count), w, l);
+      }
+    });
+    if (count > 0) {
+      result.textContent = '✅ ' + count + ' area' + (count>1?'s':'') + ' — Total: ' + totalSF.toLocaleString() + ' SF';
+    } else if (box.value.trim()) {
+      result.textContent = '❔ Format: 50x120 or 50 by 120';
+    } else {
+      result.textContent = '';
+    }
+  };
+
+  // Mic button for quick voice box
+  let _quickVoiceRec = null;
+  let _quickListening = false;
+  window.startQuickVoice = function() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) { alert('Voice not supported on this browser'); return; }
+    const btn = document.getElementById('quick-mic-btn');
+    if (_quickListening) { _quickVoiceRec && _quickVoiceRec.stop(); return; }
+    _quickVoiceRec = new SpeechRecognition();
+    _quickVoiceRec.lang = 'en-US';
+    _quickVoiceRec.interimResults = false;
+    _quickVoiceRec.maxAlternatives = 1;
+    _quickVoiceRec.continuous = false;
+    _quickVoiceRec.onstart = () => {
+      _quickListening = true;
+      if (btn) { btn.textContent = '🔴'; btn.style.background = 'linear-gradient(135deg,#ef4444,#dc2626)'; }
+    };
+    _quickVoiceRec.onend = () => {
+      _quickListening = false;
+      if (btn) { btn.textContent = '🎙️'; btn.style.background = 'linear-gradient(135deg,#f97316,#ef4444)'; }
+    };
+    _quickVoiceRec.onerror = (e) => {
+      _quickListening = false;
+      if (btn) { btn.textContent = '🎙️'; btn.style.background = 'linear-gradient(135deg,#f97316,#ef4444)'; }
+    };
+    _quickVoiceRec.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      const box = document.getElementById('quick-voice-box');
+      if (box) {
+        box.value = (box.value ? box.value + '\n' : '') + transcript;
+        parseQuickVoiceBox();
+      }
+    };
+    _quickVoiceRec.start();
+  };
 
   // Per-row voice for measurements
   window.measVoiceRow = function(idx) {
