@@ -3248,58 +3248,26 @@
     let count = 0;
     // Add new rows from voice box (don't clear existing rows)
     // Track which lines were already added using a data attribute
-    // Always reprocess all lines — clear rows first, then refill
+    // Clear and rebuild rows from voice box
     document.getElementById('meas-rows').innerHTML = '';
     measRowCount = 0;
-    // Add back 3 default empty rows
-    measAddRow(); measAddRow(); measAddRow();
-    const newLines = lines;
-    newLines.forEach((line, i) => {
-      // Split line on separators: by, x, times, ×, *
+    lines.forEach(line => {
       const parts = line.split(/\s+(?:by|x|times|×)\s+/i);
       let w = NaN, l = NaN;
       if (parts.length >= 2) {
         w = spokenToNum(parts[0].trim());
         l = spokenToNum(parts[1].trim());
       } else {
-        // No separator — try extracting any two numbers/words
-        const tokens = line.trim().split(/\s+/);
-        if (tokens.length >= 2) {
-          // Try last two tokens as numbers
-          w = spokenToNum(tokens[0]);
-          l = spokenToNum(tokens[tokens.length - 1]);
-        }
-      }
-      // Debug: show what was parsed
-      const debugEl = document.getElementById('quick-voice-result');
-      if (debugEl && (isNaN(w) || isNaN(l))) {
-        debugEl.textContent = '⚠️ Parsed: "' + line + '" → W=' + w + ' L=' + l;
+        const digits = line.match(/[\d]+\.?[\d]*/g);
+        if (digits && digits.length >= 2) { w = parseFloat(digits[0]); l = parseFloat(digits[1]); }
       }
       if (!isNaN(w) && !isNaN(l) && w > 0 && l > 0) {
-        const wVal = w, lVal = l;
         count++;
-        const namePart = line.replace(/(\d+\.?\d*\s*(?:x|by|\*|×|times)\s*\d+\.?\d*)/i,'').trim().replace(/[-,;:]/g,'').trim();
-        // Try to fill the next empty row first
-        let filled = false;
-        const rows = document.querySelectorAll('#meas-rows .area-row');
-        for (const row of rows) {
-          const wInput = row.querySelector('[placeholder="W"]');
-          const lInput = row.querySelector('[placeholder="L"]');
-          if (wInput && lInput && !wInput.value && !lInput.value) {
-            wInput.value = wVal; wInput.dispatchEvent(new Event('input',{bubbles:true}));
-            lInput.value = lVal; lInput.dispatchEvent(new Event('input',{bubbles:true}));
-            if (namePart) { const ni = row.querySelector('.area-name-input'); if(ni && !ni.value) ni.value = namePart; }
-            const id = row.id.replace('area-row-','');
-            measRowSF(parseInt(id));
-            filled = true;
-            break;
-          }
-        }
-        // No empty row found — add a new one
-        if (!filled) measAddRow(namePart || '', wVal, lVal);
+        measAddRow('', w, l); // directly add row with values
       }
     });
-    // (addedLines no longer used — we reprocess all lines each time)
+    // Add remaining empty rows up to minimum of 3
+    while (measRowCount < 3) measAddRow();
     // Calculate total from all rows
     document.querySelectorAll('#meas-rows .area-row').forEach(row => {
       const w = parseFloat(row.querySelector('[placeholder="W"]')?.value || 0);
