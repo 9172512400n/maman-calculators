@@ -3125,23 +3125,30 @@
     const lines = box.value.split(/[\n,;]+/).map(l => l.trim()).filter(Boolean);
     let totalSF = 0;
     let count = 0;
-    // Clear existing rows and rebuild from voice box
-    document.getElementById('meas-rows').innerHTML = '';
-    measRowCount = 0;
-    lines.forEach(line => {
+    // Add new rows from voice box (don't clear existing rows)
+    // Track which lines were already added using a data attribute
+    const alreadyAdded = parseInt(box.dataset.addedLines || '0');
+    const newLines = lines.slice(alreadyAdded);
+    newLines.forEach((line, i) => {
       // Match: 50x120, 50 x 120, 50by120, 50 by 120, 50*120
       const m = line.match(/(\d+\.?\d*)\s*(?:x|by|\*|×|times)\s*(\d+\.?\d*)/i);
       if (m) {
         const w = parseFloat(m[1]), l = parseFloat(m[2]);
-        totalSF += w * l;
         count++;
         // Extract optional name (words before numbers)
         const namePart = line.replace(/(\d+\.?\d*\s*(?:x|by|\*|×|times)\s*\d+\.?\d*)/i,'').trim().replace(/[-,;:]/g,'').trim();
-        measAddRow(namePart || ('Area ' + count), w, l);
+        measAddRow(namePart || '', w, l);
       }
     });
+    box.dataset.addedLines = lines.length;
+    // Calculate total from all rows
+    document.querySelectorAll('#meas-rows .area-row').forEach(row => {
+      const w = parseFloat(row.querySelector('[placeholder="W"]')?.value || 0);
+      const l = parseFloat(row.querySelector('[placeholder="L"]')?.value || 0);
+      if (w && l) totalSF += w * l;
+    });
     if (count > 0) {
-      result.textContent = '✅ ' + count + ' area' + (count>1?'s':'') + ' — Total: ' + totalSF.toLocaleString() + ' SF';
+      result.textContent = '✅ Added ' + count + ' area' + (count>1?'s':'') + ' — Total: ' + totalSF.toLocaleString() + ' SF';
     } else if (box.value.trim()) {
       result.textContent = '❔ Format: 50x120 or 50 by 120';
     } else {
