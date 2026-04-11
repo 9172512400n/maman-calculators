@@ -2910,7 +2910,7 @@
       <div class="job-card-details" id="jdetails-${job.id}">
         ${calcsHTML?`<div style="margin-bottom:10px;">${calcsHTML}</div>`:''}
         ${job.notes?`<div style="background:var(--card2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text2);margin-bottom:10px;">📝 ${job.notes}</div>`:''}
-        ${(job.photos&&job.photos.length)?`<div style="margin-bottom:10px;"><div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:6px;">📸 Photos</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${job.photos.map(url=>`<a href="${url}" target="_blank"><img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid var(--border);" /></a>`).join('')}</div></div>`:''}
+        ${(job.photos&&job.photos.length)?`<div style="margin-bottom:10px;"><div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:6px;">📸 Photos / Plans</div><div class="job-photos-grid" style="display:flex;flex-wrap:wrap;gap:8px;">${job.photos.map((url,pi)=>`<div style="position:relative;"><a href="${url}" target="_blank"><img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid var(--border);display:block;" /></a><button onclick="deleteJobPhoto('${job.id}',${pi})" style="position:absolute;top:-5px;right:-5px;width:20px;height:20px;border-radius:50%;background:#ef4444;border:2px solid #0f0f0f;color:white;font-size:13px;font-weight:900;cursor:pointer;line-height:1;padding:0;">&times;</button></div>`).join('')}</div></div>`:''}
         <div class="job-actions">
           ${job.areas?.length?`<button class="job-action-btn jab-load" onclick="loadJobToMeas('${job.id}')">📐 Load</button>`:''}
           ${job.phone?`<button class="job-action-btn jab-call" onclick="window.location.href='tel:${job.phone.replace(/\D/g,'')}'" >📞 ${job.phone}</button>`:''}
@@ -3271,6 +3271,27 @@
       };
       reader.readAsDataURL(file);
     });
+  };
+
+  // Delete a photo from a job
+  window.deleteJobPhoto = async function(jobId, photoIdx) {
+    if (!confirm('Delete this photo?')) return;
+    const job = _allJobs.find(j => j.id === jobId);
+    if (!job) return;
+    const photos = [...(job.photos||[])];
+    photos.splice(photoIdx, 1);
+    try {
+      await window._updateJob(jobId, { photos });
+      job.photos = photos;
+      // Re-render job card
+      const old = document.getElementById('jcard-'+jobId);
+      if (old) {
+        const list = old.parentNode.parentNode;
+        old.parentNode.remove();
+        renderJobCard(job, list);
+        toggleJobCard(jobId);
+      }
+    } catch(e) { alert('Error deleting photo'); }
   };
 
   // Add photos to an existing saved job
