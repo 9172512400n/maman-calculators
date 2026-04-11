@@ -3146,26 +3146,33 @@
     if (!window._uid) return alert('Not logged in. Please refresh.');
     const job   = _allJobs.find(j=>j.id===id); if(!job) return;
     const calcs = job.calcs||[];
-    // Save edited measurements
-    const editedAreas = (window._ejAreas||[]).filter(a => a.w > 0 && a.h > 0);
-    editedAreas.forEach(a => { a.sf = a.w * a.h; });
-    const measSF = editedAreas.reduce((s,a) => s + (a.sf||0), 0);
-    // Update the measurements calc entry if it exists
-    const measCalcIdx = calcs.findIndex(c => c.source === 'measurements');
-    if (editedAreas.length > 0) {
-      if (measCalcIdx >= 0) {
+    // Save edited measurements (only if the job had areas to edit)
+    let updateData = { name:address, address, customer, phone, phone2, notes };
+    if (window._ejAreas && window._ejAreas.length > 0) {
+      const editedAreas = window._ejAreas.filter(a => Number(a.w) > 0 && Number(a.h) > 0);
+      editedAreas.forEach(a => { a.w = Number(a.w); a.h = Number(a.h); a.sf = a.w * a.h; });
+      const measSF = editedAreas.reduce((s,a) => s + a.sf, 0);
+      // Update measurements calc entry
+      const measCalcIdx = calcs.findIndex(c => c.source === 'measurements');
+      if (measCalcIdx >= 0 && editedAreas.length > 0) {
         calcs[measCalcIdx].areas = editedAreas;
         calcs[measCalcIdx].totalSF = measSF;
       }
+      updateData.areas = editedAreas;
+      updateData.totalSF = measSF;
+      updateData.calcs = calcs;
+    } else {
+      // No areas to edit — just update contact info, keep everything else
+      updateData.calcs = calcs;
+      updateData.totalSF = calcs.reduce((s,c)=>s+(Number(c.totalSF)||0),0);
     }
-    const newSF = editedAreas.length > 0 ? measSF : calcs.reduce((s,c)=>s+(Number(c.totalSF)||0),0);
     const btn   = document.getElementById('ej-save-btn');
     const resetBtn = () => { btn.textContent='✅ Save Changes'; btn.disabled=false; };
     btn.textContent='⏳ Saving...'; btn.disabled=true;
     const safetyTimer = setTimeout(() => { resetBtn(); alert('Save timed out. Please try again.'); }, 12000);
     try {
-      await window._updateJob(id, { name:address, address, customer, phone, phone2, notes, calcs, areas:editedAreas, totalSF:newSF });
-      Object.assign(job, {name:address,address,customer,phone,phone2,notes,calcs,areas:editedAreas,totalSF:newSF});
+      await window._updateJob(id, updateData);
+      Object.assign(job, updateData, {name:address,address,customer,phone,phone2,notes});
       clearTimeout(safetyTimer);
       btn.textContent='✅ Saved!';
       setTimeout(()=>{
