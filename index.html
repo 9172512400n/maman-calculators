@@ -830,6 +830,10 @@
     .area-dim input:focus { border-color: var(--accent); }
     .area-dim .x-sep { font-size: 13px; color: var(--text3); font-weight: 800; }
     .area-dim .dim-unit { font-size: 10px; color: var(--text3); font-weight: 600; }
+    .row-mic-btn { background: none; border: none; font-size: 16px; cursor: pointer; padding: 2px 4px; opacity: 0.7; transition: opacity 0.15s; }
+    .row-mic-btn:active { opacity: 1; transform: scale(1.2); }
+    .row-mic-btn.listening { animation: mic-pulse 0.6s infinite alternate; }
+    @keyframes mic-pulse { from { opacity: 0.5; } to { opacity: 1; transform: scale(1.15); } }
     .area-sf { width: 62px; text-align: right; font-size: 13px; font-weight: 800; color: var(--green); flex-shrink: 0; }
     .area-del {
       width: 26px; height: 26px; background: var(--btn-clear-bg); border: none;
@@ -2338,6 +2342,7 @@
         <span class="x-sep">×</span>
         <input type="number" id="area-h-${idx}" placeholder="L" inputmode="decimal" value="${h||''}" oninput="measRowSF(${idx})" />
         <span class="dim-unit">ft</span>
+        <button class="row-mic-btn" onclick="measVoiceRow(${idx})" title="Speak measurements">🎙️</button>
       </div>
       <div class="area-sf" id="area-sf-${idx}">—</div>
       <button class="area-del" onclick="measDelRow(${idx})">✕</button>`;
@@ -3092,6 +3097,45 @@
 
   // Init measurements
   measAddRow();measAddRow();measAddRow();
+
+  // Per-row voice for measurements
+  window.measVoiceRow = function(idx) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) { alert('Voice not supported on this browser'); return; }
+    const btn = document.querySelector(`#area-row-${idx} .row-mic-btn`);
+    if (!btn) return;
+    const r = new SpeechRecognition();
+    r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 1;
+    r.onstart = () => { btn.classList.add('listening'); btn.textContent = '🔴'; };
+    r.onend   = () => { btn.classList.remove('listening'); btn.textContent = '🎙️'; };
+    r.onerror = (e) => { btn.classList.remove('listening'); btn.textContent = '🎙️'; alert('Mic error: ' + e.error); };
+    r.onresult = (e) => {
+      const t = e.results[0][0].transcript.toLowerCase();
+      // Extract two numbers: width and length
+      const nums = t.match(/(\d+\.?\d*)/g);
+      if (nums && nums.length >= 2) {
+        document.getElementById('area-w-'+idx).value = nums[0];
+        document.getElementById('area-w-'+idx).dispatchEvent(new Event('input',{bubbles:true}));
+        document.getElementById('area-h-'+idx).value = nums[1];
+        document.getElementById('area-h-'+idx).dispatchEvent(new Event('input',{bubbles:true}));
+        measRowSF(idx); measUpdateTotals();
+      } else if (nums && nums.length === 1) {
+        // Only one number — fill W
+        document.getElementById('area-w-'+idx).value = nums[0];
+        document.getElementById('area-w-'+idx).dispatchEvent(new Event('input',{bubbles:true}));
+      }
+      // Also check for area name keywords
+      const nameMap = { driveway:'Driveway', parking:'Parking', garage:'Garage', walkway:'Walkway', path:'Path', patio:'Patio', road:'Road', street:'Street', sidewalk:'Sidewalk', entrance:'Entrance', exit:'Exit', lot:'Lot' };
+      for (const [kw, label] of Object.entries(nameMap)) {
+        if (t.includes(kw)) {
+          const nameInput = document.querySelector(`#area-row-${idx} .area-name-input`);
+          if (nameInput && !nameInput.value) { nameInput.value = label; nameInput.dispatchEvent(new Event('input')); }
+          break;
+        }
+      }
+    };
+    r.start();
+  };
 
   // ── VOICE INPUT ──────────────────────────────────────────────────────────
   (function() {
