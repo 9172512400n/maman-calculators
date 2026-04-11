@@ -3251,19 +3251,19 @@
     const alreadyAdded = parseInt(box.dataset.addedLines || '0');
     const newLines = lines.slice(alreadyAdded);
     newLines.forEach((line, i) => {
-      const norm = normalizeLine(line);
-      // Split on 'x' separator to get two parts
-      const parts = norm.split(/\s*x\s*/i);
+      // Split line on separators: by, x, times, ×, *
+      const parts = line.split(/\s+(?:by|x|times|×)\s+/i);
       let w = NaN, l = NaN;
       if (parts.length >= 2) {
         w = spokenToNum(parts[0].trim());
         l = spokenToNum(parts[1].trim());
       } else {
-        // No x separator — try grabbing any two numbers
-        const allDigits = norm.match(/[\d]+\.?[\d]*/g);
-        if (allDigits && allDigits.length >= 2) {
-          w = parseFloat(allDigits[0]);
-          l = parseFloat(allDigits[1]);
+        // No separator — try extracting any two numbers/words
+        const tokens = line.trim().split(/\s+/);
+        if (tokens.length >= 2) {
+          // Try last two tokens as numbers
+          w = spokenToNum(tokens[0]);
+          l = spokenToNum(tokens[tokens.length - 1]);
         }
       }
       if (!isNaN(w) && !isNaN(l) && w > 0 && l > 0) {
