@@ -3221,9 +3221,25 @@
       if (m) {
         const w = parseFloat(m[1]), l = parseFloat(m[2]);
         count++;
-        // Extract optional name (words before numbers)
         const namePart = line.replace(/(\d+\.?\d*\s*(?:x|by|\*|×|times)\s*\d+\.?\d*)/i,'').trim().replace(/[-,;:]/g,'').trim();
-        measAddRow(namePart || '', w, l);
+        // Try to fill the next empty row first
+        let filled = false;
+        const rows = document.querySelectorAll('#meas-rows .area-row');
+        for (const row of rows) {
+          const wInput = row.querySelector('[placeholder="W"]');
+          const lInput = row.querySelector('[placeholder="L"]');
+          if (wInput && lInput && !wInput.value && !lInput.value) {
+            wInput.value = w; wInput.dispatchEvent(new Event('input',{bubbles:true}));
+            lInput.value = l; lInput.dispatchEvent(new Event('input',{bubbles:true}));
+            if (namePart) { const ni = row.querySelector('.area-name-input'); if(ni && !ni.value) ni.value = namePart; }
+            const id = row.id.replace('area-row-','');
+            measRowSF(parseInt(id));
+            filled = true;
+            break;
+          }
+        }
+        // No empty row found — add a new one
+        if (!filled) measAddRow(namePart || '', w, l);
       }
     });
     box.dataset.addedLines = lines.length;
