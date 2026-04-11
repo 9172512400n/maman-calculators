@@ -1549,7 +1549,7 @@
   <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px;">
     <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:10px;">Quick Voice Entry</div>
     <div style="display:flex;gap:8px;align-items:flex-start;">
-      <textarea id="quick-voice-box" placeholder="Speak or type measurements&#10;e.g. 50x120, 20x30, 15x40"
+      <textarea id="quick-voice-box" placeholder="Speak or type measurements&#10;e.g. 50x120, 20x30, 15x40&#10;Say 'delete' to undo last entry"
         style="flex:1;min-height:80px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text1);font-size:15px;resize:none;outline:none;line-height:1.6;"
         oninput="parseQuickVoiceBox()"></textarea>
       <button id="quick-mic-btn" onclick="startQuickVoice()"
@@ -3335,6 +3335,25 @@
           const transcript = e.results[i][0].transcript;
           const box = document.getElementById('quick-voice-box');
           if (box) {
+            const t = transcript.trim().toLowerCase();
+            // Voice command: "delete" or "undo" removes last line and last filled row
+            if (t === 'delete' || t === 'undo' || t === 'remove' || t === 'delete that') {
+              const lines = box.value.split('\n').filter(Boolean);
+              if (lines.length > 0) {
+                lines.pop();
+                box.value = lines.join('\n');
+                box.dataset.addedLines = Math.max(0, parseInt(box.dataset.addedLines||'0') - 1);
+                // Remove last filled row
+                const rows = Array.from(document.querySelectorAll('#meas-rows .area-row'));
+                for (let i = rows.length - 1; i >= 0; i--) {
+                  const wv = rows[i].querySelector('[placeholder="W"]')?.value;
+                  if (wv) { measDelRow(rows[i].id.replace('area-row-','')); break; }
+                }
+                const result = document.getElementById('quick-voice-result');
+                if (result) result.textContent = '🗑 Last entry deleted';
+              }
+              return;
+            }
             box.value = (box.value ? box.value + '\n' : '') + transcript;
             parseQuickVoiceBox();
           }
