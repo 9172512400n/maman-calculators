@@ -2915,7 +2915,8 @@
           ${job.areas?.length?`<button class="job-action-btn jab-load" onclick="loadJobToMeas('${job.id}')">📐 Load</button>`:''}
           ${job.phone?`<button class="job-action-btn jab-call" onclick="window.location.href='tel:${job.phone.replace(/\D/g,'')}'" >📞 ${job.phone}</button>`:''}
           ${job.phone2?`<button class="job-action-btn jab-call" onclick="window.location.href='tel:${job.phone2.replace(/\D/g,'')}'" >📞 ${job.phone2}</button>`:''}
-          <button class="job-action-btn jab-share" onclick='shareJob("${job.id}")'>↗ Share</button>
+          <button class="job-action-btn jab-share" onclick='textJobCard("${job.id}")'>💬 Text</button>
+          <button class="job-action-btn jab-share" style="background:#1a3a1a;color:#4ade80;" onclick='emailJobCard("${job.id}")'>✉️ Email</button>
           <button class="job-action-btn" style="background:#1a4a8a;color:#5b9bd5;" onclick='openEditJob("${job.id}")'>✏️ Edit</button>
           <label class="job-action-btn" style="background:#1a3a2a;color:#4ade80;cursor:pointer;" title="Add photos or plans">
             📸 Add Photos
