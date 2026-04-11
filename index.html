@@ -3092,6 +3092,169 @@
 
   // Init measurements
   measAddRow();measAddRow();measAddRow();
+
+  // ── VOICE INPUT ──────────────────────────────────────────────────────────
+  (function() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return; // not supported
+
+    const btn = document.createElement('button');
+    btn.id = 'voice-btn';
+    btn.innerHTML = '🎙️';
+    btn.title = 'Tap to speak measurements';
+    btn.style.cssText = `
+      position: fixed; bottom: 90px; right: 20px; z-index: 999;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(135deg, #f97316, #ef4444);
+      border: none; color: white; font-size: 24px;
+      box-shadow: 0 4px 16px rgba(249,115,22,0.5);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    `;
+    document.body.appendChild(btn);
+
+    // Status toast
+    const toast = document.createElement('div');
+    toast.id = 'voice-toast';
+    toast.style.cssText = `
+      position: fixed; bottom: 158px; right: 16px; z-index: 1000;
+      background: rgba(0,0,0,0.85); color: #fff; font-size: 13px;
+      padding: 8px 14px; border-radius: 20px; max-width: 240px;
+      text-align: center; display: none; pointer-events: none;
+    `;
+    document.body.appendChild(toast);
+
+    function showToast(msg, duration = 2500) {
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => toast.style.display = 'none', duration);
+    }
+
+    function getActiveTab() {
+      const active = document.querySelector('.pill-tab.active');
+      if (!active) return 'asphalt';
+      const text = active.textContent.trim().toLowerCase();
+      if (text.includes('asphalt')) return 'asphalt';
+      if (text.includes('concrete')) return 'concrete';
+      if (text.includes('sand')) return 'sand';
+      if (text.includes('curb')) return 'curb';
+      if (text.includes('meas')) return 'meas';
+      return 'asphalt';
+    }
+
+    function setField(id, value) {
+      const el = document.getElementById(id);
+      if (el && value !== null && value !== undefined) {
+        el.value = value;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    function extractNumber(text, keywords) {
+      for (const kw of keywords) {
+        // Match: "width 20", "20 feet wide", "20 foot width", "20ft"
+        const patterns = [
+          new RegExp(kw + '[\\s:]*([\\d.]+)', 'i'),
+          new RegExp('([\\d.]+)[\\s]*(feet|foot|ft|inches|inch|in)?[\\s]*' + kw, 'i'),
+        ];
+        for (const p of patterns) {
+          const m = text.match(p);
+          if (m) return parseFloat(m[1] || m[2]);
+        }
+      }
+      return null;
+    }
+
+    function parseAndFill(transcript) {
+      const t = transcript.toLowerCase();
+      const tab = getActiveTab();
+
+      const width     = extractNumber(t, ['wide', 'width', 'w']);
+      const length    = extractNumber(t, ['long', 'length', 'len', 'l']);
+      const thickness = extractNumber(t, ['thick', 'thickness', 'depth', 'inches', 'inch', 'deep']);
+      const cost      = extractNumber(t, ['cost', 'price', 'per ton', 'dollar']);
+
+      let filled = [];
+
+      if (tab === 'asphalt') {
+        if (width !== null)     { setField('asp-width', width); filled.push('width'); }
+        if (length !== null)    { setField('asp-length', length); filled.push('length'); }
+        if (thickness !== null) { setField('asp-depth', thickness); filled.push('thickness'); }
+        if (cost !== null)      { setField('asp-cost', cost); filled.push('cost'); }
+        if (filled.length) calcAsphalt && calcAsphalt();
+      } else if (tab === 'concrete') {
+        if (width !== null)     { setField('con-lwt-height', width); filled.push('width'); }
+        if (length !== null)    { setField('con-lwt-length', length); filled.push('length'); }
+        if (thickness !== null) { setField('con-lwt-thickness', thickness); filled.push('thickness'); }
+        if (filled.length) calcConcrete && calcConcrete();
+      } else if (tab === 'sand') {
+        if (width !== null)     { setField('snd-width', width); filled.push('width'); }
+        if (length !== null)    { setField('snd-length', length); filled.push('length'); }
+        if (thickness !== null) { setField('snd-depth', thickness); filled.push('thickness'); }
+        if (cost !== null)      { setField('snd-cost', cost); filled.push('cost'); }
+        if (filled.length) calcSand && calcSand();
+      } else if (tab === 'curb') {
+        const depth  = extractNumber(t, ['curb depth', 'depth']);
+        const height = extractNumber(t, ['curb height', 'height']);
+        const gutter = extractNumber(t, ['gutter']);
+        const flag   = extractNumber(t, ['flag', 'flagstone']);
+        if (depth !== null)  { setField('curb-depth', depth); filled.push('depth'); }
+        if (height !== null) { setField('curb-height', height); filled.push('height'); }
+        if (gutter !== null) { setField('curb-gutter', gutter); filled.push('gutter'); }
+        if (flag !== null)   { setField('curb-flag', flag); filled.push('flag'); }
+        if (length !== null) { setField('curb-length', length); filled.push('length'); }
+        if (filled.length) calcCurb && calcCurb();
+      }
+
+      if (filled.length > 0) {
+        showToast('✅ Filled: ' + filled.join(', '));
+      } else {
+        showToast('❓ Heard: "' + transcript + '"\nTry: "width 20 length 50 thickness 3"');
+      }
+    }
+
+    let recognition = null;
+    let listening = false;
+
+    btn.addEventListener('click', () => {
+      if (listening) {
+        recognition && recognition.stop();
+        return;
+      }
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        listening = true;
+        btn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+        btn.style.boxShadow = '0 0 0 8px rgba(239,68,68,0.25)';
+        btn.innerHTML = '⏹️';
+        showToast('🎙️ Listening... speak your measurements', 10000);
+      };
+
+      recognition.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        parseAndFill(transcript);
+      };
+
+      recognition.onerror = (e) => {
+        showToast('⚠️ ' + (e.error === 'not-allowed' ? 'Microphone access denied' : 'Error: ' + e.error));
+      };
+
+      recognition.onend = () => {
+        listening = false;
+        btn.style.background = 'linear-gradient(135deg, #f97316, #ef4444)';
+        btn.style.boxShadow = '0 4px 16px rgba(249,115,22,0.5)';
+        btn.innerHTML = '🎙️';
+      };
+
+      recognition.start();
+    });
+  })();
 </script>
 </body>
 </html>
