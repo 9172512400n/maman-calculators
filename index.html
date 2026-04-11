@@ -1681,6 +1681,13 @@
       <div class="save-job-label">📝 Notes</div>
       <textarea class="save-job-input save-job-textarea" id="ej-notes" placeholder="Notes…"></textarea>
     </div>
+    <!-- Measurements editor -->
+    <div class="save-job-field" id="ej-meas-section" style="display:none;">
+      <div class="save-job-label">📐 Measurements</div>
+      <div id="ej-meas-rows" style="display:flex;flex-direction:column;gap:6px;"></div>
+      <button onclick="ejAddMeasRow()" style="margin-top:8px;background:none;border:1px dashed var(--border);border-radius:8px;width:100%;padding:10px;color:var(--text3);cursor:pointer;font-size:13px;">+ Add Area</button>
+    </div>
+
     <!-- Calculations list with delete per calc -->
     <div class="save-job-field">
       <div class="save-job-label">📊 Calculations</div>
@@ -3068,8 +3075,53 @@
         </div>`;
       }).join('');
     }
+    // Render measurements editor if job has areas
+    const areas = job.areas||[];
+    const ejMeasSection = document.getElementById('ej-meas-section');
+    const ejMeasRows = document.getElementById('ej-meas-rows');
+    if (areas.length > 0) {
+      ejMeasSection.style.display = '';
+      ejMeasRows.innerHTML = areas.map((a,i) => `
+        <div class="ej-meas-row" style="display:flex;align-items:center;gap:6px;background:var(--card2);border-radius:8px;padding:8px 10px;">
+          <input type="text" value="${a.name||''}" placeholder="Area name" style="flex:2;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:13px;outline:none;" data-ej-idx="${i}" data-ej-field="name" oninput="ejMeasChange(this)" />
+          <input type="number" value="${a.w||''}" placeholder="W" inputmode="decimal" style="width:56px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:13px;outline:none;text-align:center;" data-ej-idx="${i}" data-ej-field="w" oninput="ejMeasChange(this)" />
+          <span style="color:var(--text3);font-size:13px;">×</span>
+          <input type="number" value="${a.h||''}" placeholder="L" inputmode="decimal" style="width:56px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:13px;outline:none;text-align:center;" data-ej-idx="${i}" data-ej-field="h" oninput="ejMeasChange(this)" />
+          <span style="font-size:12px;color:var(--green);font-weight:700;min-width:52px;text-align:right;" id="ej-sf-${i}">${(a.w&&a.h)?((a.w*a.h).toLocaleString()+' SF'):'—'}</span>
+          <button onclick="ejDelMeasRow(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 4px;">✕</button>
+        </div>`).join('');
+      window._ejAreas = JSON.parse(JSON.stringify(areas)); // deep copy
+    } else {
+      ejMeasSection.style.display = 'none';
+      window._ejAreas = [];
+    }
     document.getElementById('edit-job-overlay').classList.remove('hidden');
   }
+
+  window.ejMeasChange = function(input) {
+    const idx = parseInt(input.dataset.ejIdx);
+    const field = input.dataset.ejField;
+    if (!window._ejAreas[idx]) return;
+    window._ejAreas[idx][field] = field==='name' ? input.value : parseFloat(input.value)||0;
+    const a = window._ejAreas[idx];
+    const sfEl = document.getElementById('ej-sf-'+idx);
+    if (sfEl) sfEl.textContent = (a.w&&a.h) ? ((a.w*a.h).toLocaleString()+' SF') : '—';
+  };
+
+  window.ejAddMeasRow = function() {
+    if (!window._ejAreas) window._ejAreas = [];
+    const idx = window._ejAreas.length;
+    window._ejAreas.push({name:'', w:0, h:0, sf:0});
+    const id = document.getElementById('ej-id').value;
+    openEditJob(id);
+  };
+
+  window.ejDelMeasRow = function(idx) {
+    if (!window._ejAreas) return;
+    window._ejAreas.splice(idx,1);
+    const id = document.getElementById('ej-id').value;
+    openEditJob(id);
+  };
 
   function removeCalcInEdit(idx) {
     if (!confirm('Remove this calculation?')) return;
@@ -3092,14 +3144,26 @@
     if (!window._uid) return alert('Not logged in. Please refresh.');
     const job   = _allJobs.find(j=>j.id===id); if(!job) return;
     const calcs = job.calcs||[];
-    const newSF = calcs.reduce((s,c)=>s+(Number(c.totalSF)||0),0);
+    // Save edited measurements
+    const editedAreas = (window._ejAreas||[]).filter(a => a.w > 0 && a.h > 0);
+    editedAreas.forEach(a => { a.sf = a.w * a.h; });
+    const measSF = editedAreas.reduce((s,a) => s + (a.sf||0), 0);
+    // Update the measurements calc entry if it exists
+    const measCalcIdx = calcs.findIndex(c => c.source === 'measurements');
+    if (editedAreas.length > 0) {
+      if (measCalcIdx >= 0) {
+        calcs[measCalcIdx].areas = editedAreas;
+        calcs[measCalcIdx].totalSF = measSF;
+      }
+    }
+    const newSF = editedAreas.length > 0 ? measSF : calcs.reduce((s,c)=>s+(Number(c.totalSF)||0),0);
     const btn   = document.getElementById('ej-save-btn');
     const resetBtn = () => { btn.textContent='✅ Save Changes'; btn.disabled=false; };
     btn.textContent='⏳ Saving...'; btn.disabled=true;
     const safetyTimer = setTimeout(() => { resetBtn(); alert('Save timed out. Please try again.'); }, 12000);
     try {
-      await window._updateJob(id, { name:address, address, customer, phone, phone2, notes, calcs, totalSF:newSF });
-      Object.assign(job, {name:address,address,customer,phone,phone2,notes,calcs,totalSF:newSF});
+      await window._updateJob(id, { name:address, address, customer, phone, phone2, notes, calcs, areas:editedAreas, totalSF:newSF });
+      Object.assign(job, {name:address,address,customer,phone,phone2,notes,calcs,areas:editedAreas,totalSF:newSF});
       clearTimeout(safetyTimer);
       btn.textContent='✅ Saved!';
       setTimeout(()=>{
