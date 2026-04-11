@@ -3270,6 +3270,11 @@
           l = spokenToNum(tokens[tokens.length - 1]);
         }
       }
+      // Debug: show what was parsed
+      const debugEl = document.getElementById('quick-voice-result');
+      if (debugEl && (isNaN(w) || isNaN(l))) {
+        debugEl.textContent = '⚠️ Parsed: "' + line + '" → W=' + w + ' L=' + l;
+      }
       if (!isNaN(w) && !isNaN(l) && w > 0 && l > 0) {
         const wVal = w, lVal = l;
         count++;
