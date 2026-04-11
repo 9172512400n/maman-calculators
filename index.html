@@ -3252,11 +3252,21 @@
     const newLines = lines.slice(alreadyAdded);
     newLines.forEach((line, i) => {
       const norm = normalizeLine(line);
-      // Match: 50x120, 50 x 120, or "hundred x fifteen"
-      const m = norm.match(/([\w\s\.]+?)\s*x\s*([\w\s\.]+?)(?:\s*$|(?=\b(?:x|,|;)\b))/i) ||
-                norm.match(/([\d\.]+)\s*x\s*([\d\.]+)/i);
-      if (m) {
-        const w = spokenToNum(m[1].trim()), l = spokenToNum(m[2].trim());
+      // Extract ALL numbers from the line, take first two
+      const allNums = [];
+      // First try to match digit pairs
+      const digitPairs = norm.match(/([\d]+\.?[\d]*)\s*x\s*([\d]+\.?[\d]*)/i);
+      if (digitPairs) {
+        allNums.push(parseFloat(digitPairs[1]), parseFloat(digitPairs[2]));
+      } else {
+        // Fallback: grab any numbers in the string
+        const allDigits = norm.match(/[\d]+\.?[\d]*/g);
+        if (allDigits && allDigits.length >= 2) {
+          allNums.push(parseFloat(allDigits[0]), parseFloat(allDigits[1]));
+        }
+      }
+      if (allNums.length >= 2) {
+        const w = allNums[0], l = allNums[1];
         if (isNaN(w) || isNaN(l) || w <= 0 || l <= 0) return;
         count++;
         const namePart = line.replace(/(\d+\.?\d*\s*(?:x|by|\*|×|times)\s*\d+\.?\d*)/i,'').trim().replace(/[-,;:]/g,'').trim();
