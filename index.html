@@ -3248,8 +3248,12 @@
     let count = 0;
     // Add new rows from voice box (don't clear existing rows)
     // Track which lines were already added using a data attribute
-    const alreadyAdded = parseInt(box.dataset.addedLines || '0');
-    const newLines = lines.slice(alreadyAdded);
+    // Always reprocess all lines — clear rows first, then refill
+    document.getElementById('meas-rows').innerHTML = '';
+    measRowCount = 0;
+    // Add back 3 default empty rows
+    measAddRow(); measAddRow(); measAddRow();
+    const newLines = lines;
     newLines.forEach((line, i) => {
       // Split line on separators: by, x, times, ×, *
       const parts = line.split(/\s+(?:by|x|times|×)\s+/i);
@@ -3290,7 +3294,7 @@
         if (!filled) measAddRow(namePart || '', wVal, lVal);
       }
     });
-    box.dataset.addedLines = lines.length;
+    // (addedLines no longer used — we reprocess all lines each time)
     // Calculate total from all rows
     document.querySelectorAll('#meas-rows .area-row').forEach(row => {
       const w = parseFloat(row.querySelector('[placeholder="W"]')?.value || 0);
