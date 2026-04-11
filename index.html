@@ -3252,22 +3252,22 @@
     const newLines = lines.slice(alreadyAdded);
     newLines.forEach((line, i) => {
       const norm = normalizeLine(line);
-      // Extract ALL numbers from the line, take first two
-      const allNums = [];
-      // First try to match digit pairs
-      const digitPairs = norm.match(/([\d]+\.?[\d]*)\s*x\s*([\d]+\.?[\d]*)/i);
-      if (digitPairs) {
-        allNums.push(parseFloat(digitPairs[1]), parseFloat(digitPairs[2]));
+      // Split on 'x' separator to get two parts
+      const parts = norm.split(/\s*x\s*/i);
+      let w = NaN, l = NaN;
+      if (parts.length >= 2) {
+        w = spokenToNum(parts[0].trim());
+        l = spokenToNum(parts[1].trim());
       } else {
-        // Fallback: grab any numbers in the string
+        // No x separator — try grabbing any two numbers
         const allDigits = norm.match(/[\d]+\.?[\d]*/g);
         if (allDigits && allDigits.length >= 2) {
-          allNums.push(parseFloat(allDigits[0]), parseFloat(allDigits[1]));
+          w = parseFloat(allDigits[0]);
+          l = parseFloat(allDigits[1]);
         }
       }
-      if (allNums.length >= 2) {
-        const w = allNums[0], l = allNums[1];
-        if (isNaN(w) || isNaN(l) || w <= 0 || l <= 0) return;
+      if (!isNaN(w) && !isNaN(l) && w > 0 && l > 0) {
+        const wVal = w, lVal = l;
         count++;
         const namePart = line.replace(/(\d+\.?\d*\s*(?:x|by|\*|×|times)\s*\d+\.?\d*)/i,'').trim().replace(/[-,;:]/g,'').trim();
         // Try to fill the next empty row first
@@ -3277,8 +3277,8 @@
           const wInput = row.querySelector('[placeholder="W"]');
           const lInput = row.querySelector('[placeholder="L"]');
           if (wInput && lInput && !wInput.value && !lInput.value) {
-            wInput.value = w; wInput.dispatchEvent(new Event('input',{bubbles:true}));
-            lInput.value = l; lInput.dispatchEvent(new Event('input',{bubbles:true}));
+            wInput.value = wVal; wInput.dispatchEvent(new Event('input',{bubbles:true}));
+            lInput.value = lVal; lInput.dispatchEvent(new Event('input',{bubbles:true}));
             if (namePart) { const ni = row.querySelector('.area-name-input'); if(ni && !ni.value) ni.value = namePart; }
             const id = row.id.replace('area-row-','');
             measRowSF(parseInt(id));
@@ -3287,7 +3287,7 @@
           }
         }
         // No empty row found — add a new one
-        if (!filled) measAddRow(namePart || '', w, l);
+        if (!filled) measAddRow(namePart || '', wVal, lVal);
       }
     });
     box.dataset.addedLines = lines.length;
