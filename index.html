@@ -1568,7 +1568,14 @@
     <div class="meas-sum-lbl">Summary</div>
     <div class="meas-sum-row"><span class="sk">Number of areas</span><span class="sv" id="meas-count">0</span></div>
     <div class="meas-sum-row"><span class="sk">Total Square Footage</span><span class="sv green" id="meas-total-sf">0 SF</span></div>
-    <div class="meas-sum-row"><span class="sk">+ 10% waste</span><span class="sv amber" id="meas-waste-sf">0 SF</span></div>
+    <div class="meas-sum-row" id="meas-waste-row" style="display:none;">
+      <span class="sk">+ 10% waste</span>
+      <span class="sv amber" id="meas-waste-sf">0 SF</span>
+    </div>
+    <div class="meas-sum-row" style="cursor:pointer;" onclick="toggleWaste()">
+      <span class="sk" style="color:var(--accent);">+ 10% waste</span>
+      <span id="meas-waste-toggle" style="font-size:12px;color:var(--accent);font-weight:700;">OFF ○</span>
+    </div>
   </div>
 
   <div class="meas-price-card">
@@ -2392,6 +2399,15 @@
     measUpdateTotals();
   }
   function measDelRow(idx){ const r=document.getElementById('area-row-'+idx);if(r)r.remove();measUpdateTotals(); }
+  let _wasteOn = false;
+  window.toggleWaste = function() {
+    _wasteOn = !_wasteOn;
+    const row = document.getElementById('meas-waste-row');
+    const toggle = document.getElementById('meas-waste-toggle');
+    if (row) row.style.display = _wasteOn ? '' : 'none';
+    if (toggle) toggle.textContent = _wasteOn ? 'ON ●' : 'OFF ○';
+    measUpdateTotals();
+  };
   function measUpdateTotals(){
     let total=0,count=0;
     document.querySelectorAll('.area-row').forEach(row=>{
@@ -3238,25 +3254,30 @@
     _quickVoiceRec.lang = 'en-US';
     _quickVoiceRec.interimResults = false;
     _quickVoiceRec.maxAlternatives = 1;
-    _quickVoiceRec.continuous = false;
+    _quickVoiceRec.continuous = true; // Stay on — keep recording multiple measurements
     _quickVoiceRec.onstart = () => {
       _quickListening = true;
-      if (btn) { btn.textContent = '🔴'; btn.style.background = 'linear-gradient(135deg,#ef4444,#dc2626)'; }
+      if (btn) { btn.textContent = '🔴'; btn.style.background = 'linear-gradient(135deg,#ef4444,#dc2626)'; btn.style.boxShadow = '0 0 0 6px rgba(239,68,68,0.25)'; }
     };
     _quickVoiceRec.onend = () => {
       _quickListening = false;
-      if (btn) { btn.textContent = '🎙️'; btn.style.background = 'linear-gradient(135deg,#f97316,#ef4444)'; }
+      if (btn) { btn.textContent = '🎙️'; btn.style.background = 'linear-gradient(135deg,#f97316,#ef4444)'; btn.style.boxShadow = ''; }
     };
     _quickVoiceRec.onerror = (e) => {
       _quickListening = false;
-      if (btn) { btn.textContent = '🎙️'; btn.style.background = 'linear-gradient(135deg,#f97316,#ef4444)'; }
+      if (btn) { btn.textContent = '🎙️'; btn.style.background = 'linear-gradient(135deg,#f97316,#ef4444)'; btn.style.boxShadow = ''; }
     };
     _quickVoiceRec.onresult = (e) => {
-      const transcript = e.results[0][0].transcript;
-      const box = document.getElementById('quick-voice-box');
-      if (box) {
-        box.value = (box.value ? box.value + '\n' : '') + transcript;
-        parseQuickVoiceBox();
+      // Process all new results since last call
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          const transcript = e.results[i][0].transcript;
+          const box = document.getElementById('quick-voice-box');
+          if (box) {
+            box.value = (box.value ? box.value + '\n' : '') + transcript;
+            parseQuickVoiceBox();
+          }
+        }
       }
     };
     _quickVoiceRec.start();
