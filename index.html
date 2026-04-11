@@ -2908,6 +2908,10 @@
           ${job.phone2?`<button class="job-action-btn jab-call" onclick="window.location.href='tel:${job.phone2.replace(/\D/g,'')}'" >📞 ${job.phone2}</button>`:''}
           <button class="job-action-btn jab-share" onclick='shareJob("${job.id}")'>↗ Share</button>
           <button class="job-action-btn" style="background:#1a4a8a;color:#5b9bd5;" onclick='openEditJob("${job.id}")'>✏️ Edit</button>
+          <label class="job-action-btn" style="background:#1a3a2a;color:#4ade80;cursor:pointer;" title="Add photos or plans">
+            📸 Add Photos
+            <input type="file" accept="image/*" multiple style="display:none;" onchange="addPhotosToJob('${job.id}', this)" />
+          </label>
         </div>
       </div>`;
     wrap.appendChild(card);
@@ -3189,6 +3193,54 @@
       };
       reader.readAsDataURL(file);
     });
+  };
+
+  // Add photos to an existing saved job
+  window.addPhotosToJob = async function(jobId, input) {
+    const files = Array.from(input.files);
+    if (!files.length) return;
+    const label = input.parentElement;
+    const origText = label.childNodes[0].textContent;
+    label.childNodes[0].textContent = '⏳ Uploading...';
+    try {
+      const urls = [];
+      for (const file of files) {
+        const path = 'jobs/' + window._uid + '/' + jobId + '/' + Date.now() + '_' + file.name;
+        const ref = window._storageRef(window._storage, path);
+        await window._uploadBytes(ref, file);
+        const url = await window._getDownloadURL(ref);
+        urls.push(url);
+      }
+      // Merge with existing photos
+      const job = _allJobs.find(j => j.id === jobId);
+      const existing = job?.photos || [];
+      const allPhotos = [...existing, ...urls];
+      await window._updateJob(jobId, { photos: allPhotos });
+      // Update local job object
+      if (job) job.photos = allPhotos;
+      // Re-render the photo section
+      const photoSection = document.querySelector(`#jdetails-${jobId} .job-photos-grid`);
+      if (photoSection) {
+        urls.forEach(url => {
+          const a = document.createElement('a');
+          a.href = url; a.target = '_blank';
+          const img = document.createElement('img');
+          img.src = url; img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid var(--border);';
+          a.appendChild(img); photoSection.appendChild(a);
+        });
+      } else {
+        // Reload job card
+        const old = document.getElementById('jcard-'+jobId);
+        if (old) { const list = old.parentNode.parentNode; old.parentNode.remove(); renderJobCard(job, list); }
+      }
+      label.childNodes[0].textContent = '✅ ' + urls.length + ' added!';
+      setTimeout(() => { label.childNodes[0].textContent = origText; }, 2000);
+    } catch(e) {
+      label.childNodes[0].textContent = '❌ Error';
+      setTimeout(() => { label.childNodes[0].textContent = origText; }, 2000);
+      console.error(e);
+    }
+    input.value = '';
   };
 
   window.uploadPhotosForJob = async function(jobId) {
